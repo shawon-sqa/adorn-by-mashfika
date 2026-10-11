@@ -1,6 +1,7 @@
 import { OrderRecord } from "@/lib/validations/checkout";
 
 export type OrderStatus =
+  | "draft"
   | "pending"
   | "confirmed"
   | "shipped"
@@ -11,6 +12,7 @@ export interface AdminOrderRecord extends OrderRecord {
   orderStatus: OrderStatus;
   courierName?: string;
   trackingNumber?: string;
+  courierNotes?: string;
 }
 
 export const INITIAL_MOCK_ORDERS: AdminOrderRecord[] = [
@@ -34,6 +36,7 @@ export const INITIAL_MOCK_ORDERS: AdminOrderRecord[] = [
         quantity: 1,
         selectedColor: "Antique Gold & Emerald",
         gradient: "from-[#F7E7CE] via-[#FCEADE] to-[#F3D1DC]",
+        imageUrl: "/images/products/kundan-choker-1.jpg",
       },
     ],
     payment: {
@@ -68,6 +71,7 @@ export const INITIAL_MOCK_ORDERS: AdminOrderRecord[] = [
         quantity: 1,
         selectedColor: "Rose Gold",
         gradient: "from-[#FADADD] via-[#FDE8E9] to-[#F4C2C2]",
+        imageUrl: "/images/products/rose-quartz-jhumka.jpg",
       },
       {
         id: "prod-4",
@@ -76,6 +80,7 @@ export const INITIAL_MOCK_ORDERS: AdminOrderRecord[] = [
         quantity: 1,
         selectedColor: "Champagne Gold",
         gradient: "from-[#FFF6E9] via-[#FAF0E6] to-[#EAD7D1]",
+        imageUrl: "/images/products/pearl-ring.jpg",
       },
     ],
     payment: {
@@ -110,6 +115,7 @@ export const INITIAL_MOCK_ORDERS: AdminOrderRecord[] = [
         quantity: 1,
         selectedColor: "Burgundy Wine",
         gradient: "from-[#EDE6D6] via-[#EFE5DB] to-[#E3CBB3]",
+        imageUrl: "/images/products/velvet-potli.jpg",
       },
     ],
     payment: {
@@ -144,6 +150,7 @@ export const INITIAL_MOCK_ORDERS: AdminOrderRecord[] = [
         quantity: 1,
         selectedColor: "Blush Pink",
         gradient: "from-[#FFEBE8] via-[#FFF3F1] to-[#FCE3DF]",
+        imageUrl: "/images/products/silk-dupatta.jpg",
       },
     ],
     payment: {
@@ -202,7 +209,8 @@ export function updateAdminOrderStatus(
   orderId: string,
   newStatus: OrderStatus,
   courierName?: string,
-  trackingNumber?: string
+  trackingNumber?: string,
+  courierNotes?: string
 ): AdminOrderRecord[] {
   const current = getAdminOrders();
   const updated = current.map((ord) => {
@@ -212,10 +220,34 @@ export function updateAdminOrderStatus(
         orderStatus: newStatus,
         ...(courierName !== undefined && { courierName }),
         ...(trackingNumber !== undefined && { trackingNumber }),
+        ...(courierNotes !== undefined && { courierNotes }),
       };
     }
     return ord;
   });
   saveAdminOrders(updated);
+  return updated;
+}
+
+export function deleteAdminOrder(orderId: string): AdminOrderRecord[] {
+  const current = getAdminOrders();
+  const updated = current.filter((ord) => ord.orderId !== orderId);
+  saveAdminOrders(updated);
+
+  // Also remove from adorn_orders and individual order keys if present
+  if (typeof window !== "undefined") {
+    try {
+      const rawUserOrders = localStorage.getItem("adorn_orders");
+      if (rawUserOrders) {
+        const userOrders: OrderRecord[] = JSON.parse(rawUserOrders);
+        const filteredUserOrders = userOrders.filter((o) => o.orderId !== orderId);
+        localStorage.setItem("adorn_orders", JSON.stringify(filteredUserOrders));
+      }
+      localStorage.removeItem(`adorn_order_${orderId}`);
+    } catch {
+      // Ignore
+    }
+  }
+
   return updated;
 }

@@ -15,9 +15,18 @@ export const PRODUCTS_DATA: Product[] = [
     stockCount: 8,
     badge: "Bestseller",
     colors: ["Antique Gold & Emerald", "Ruby Crimson", "Classic Champagne"],
+    colorVariants: [
+      { name: "Antique Gold & Emerald", inStock: true },
+      { name: "Ruby Crimson", inStock: false },
+      { name: "Classic Champagne", inStock: true },
+    ],
     materials: ["Brass base", "22K Micron Gold Plating", "Faux Kundan", "Freshwater Pearls"],
     gradient: "from-[#F7E7CE] via-[#FCEADE] to-[#F3D1DC]",
-    images: ["/images/products/kundan-choker-1.jpg"],
+    images: [
+      "/images/products/kundan-choker-1.jpg",
+      "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?auto=format&fit=crop&w=800&q=80",
+    ],
     details: [
       "Adjustable dori cord closure fits all necklines",
       "Lead and nickel-free, hypoallergenic plating",
@@ -39,9 +48,16 @@ export const PRODUCTS_DATA: Product[] = [
     stockCount: 14,
     badge: "Popular",
     colors: ["Rose Gold", "Vintage Silver"],
+    colorVariants: [
+      { name: "Rose Gold", inStock: true },
+      { name: "Vintage Silver", inStock: false },
+    ],
     materials: ["Sterling Silver Alloy", "Natural Rose Quartz", "Micro Pearls"],
     gradient: "from-[#FADADD] via-[#FDE8E9] to-[#F4C2C2]",
-    images: ["/images/products/rose-quartz-jhumka.jpg"],
+    images: [
+      "/images/products/rose-quartz-jhumka.jpg",
+      "https://images.unsplash.com/photo-1630019852942-f89202989a59?auto=format&fit=crop&w=800&q=80",
+    ],
     details: [
       "Weight: 22g total (balanced for ear comfort)",
       "Secure push-back closure with silicone comfort backing",
@@ -62,9 +78,17 @@ export const PRODUCTS_DATA: Product[] = [
     stockCount: 5,
     badge: "Limited Edition",
     colors: ["Burgundy Wine", "Emerald Forest", "Dusty Rose"],
+    colorVariants: [
+      { name: "Burgundy Wine", inStock: true },
+      { name: "Emerald Forest", inStock: true },
+      { name: "Dusty Rose", inStock: false },
+    ],
     materials: ["Pure Micro-Velvet", "Metallic Zardozi Thread", "Handmade Pearl Fringe"],
     gradient: "from-[#EDE6D6] via-[#EFE5DB] to-[#E3CBB3]",
-    images: ["/images/products/velvet-potli.jpg"],
+    images: [
+      "/images/products/velvet-potli.jpg",
+      "https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=800&q=80",
+    ],
     details: [
       "Dimensions: 8.5 x 8.5 inches with expanding base",
       "Reinforced inner satin lining with slip pocket",
@@ -84,9 +108,16 @@ export const PRODUCTS_DATA: Product[] = [
     stockCount: 18,
     badge: "New",
     colors: ["Champagne Gold", "Rose Gold"],
+    colorVariants: [
+      { name: "Champagne Gold", inStock: true },
+      { name: "Rose Gold", inStock: true },
+    ],
     materials: ["Brass Core", "Shell Pearl", "Grade AAA Cubic Zirconia"],
     gradient: "from-[#FFF6E9] via-[#FAF0E6] to-[#EAD7D1]",
-    images: ["/images/products/pearl-ring.jpg"],
+    images: [
+      "/images/products/pearl-ring.jpg",
+      "https://images.unsplash.com/photo-1605100804763-247f67b3557e?auto=format&fit=crop&w=800&q=80",
+    ],
     details: [
       "Adjustable band mechanism (comfortably fits US ring sizes 6 to 9)",
       "Lustrous pearlescent shimmer with scratch-resistant coating",
@@ -106,9 +137,17 @@ export const PRODUCTS_DATA: Product[] = [
     stockCount: 6,
     badge: "Boutique Exclusive",
     colors: ["Blush Pink", "Ivory Cream", "Powder Blue"],
+    colorVariants: [
+      { name: "Blush Pink", inStock: true },
+      { name: "Ivory Cream", inStock: false },
+      { name: "Powder Blue", inStock: true },
+    ],
     materials: ["Pure Silk Organza", "Fine Resham Silk Thread", "Gota Patti Edging"],
     gradient: "from-[#FFEBE8] via-[#FFF3F1] to-[#FCE3DF]",
-    images: ["/images/products/silk-dupatta.jpg"],
+    images: [
+      "/images/products/silk-dupatta.jpg",
+      "https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=800&q=80",
+    ],
     details: [
       "Length: 2.5 meters standard boutique drape",
       "Hand-finished scalloped edging with neat hemming",
@@ -128,6 +167,9 @@ export const PRODUCTS_DATA: Product[] = [
     stockCount: 4,
     badge: "Artisanal",
     colors: ["Royal Polki Gold"],
+    colorVariants: [
+      { name: "Royal Polki Gold", inStock: true },
+    ],
     materials: ["Hand-pressed Jadau alloy", "Polki Glass", "South Sea Style Seed Pearls"],
     gradient: "from-[#FDFBF7] via-[#F4EADB] to-[#E6D2B5]",
     images: ["/images/products/polki-necklace.jpg"],
@@ -150,6 +192,9 @@ export const PRODUCTS_DATA: Product[] = [
     stockCount: 12,
     badge: "Trending",
     colors: ["Pearly White & Gold"],
+    colorVariants: [
+      { name: "Pearly White & Gold", inStock: true },
+    ],
     materials: ["Natural Mother-of-Pearl", "Tarnish-Resistant Copper Wire", "Brass Comb Teeth"],
     gradient: "from-[#F5EFE6] via-[#E8DFD8] to-[#DDD2C9]",
     images: ["/images/products/hair-comb.jpg"],
@@ -172,6 +217,10 @@ export const PRODUCTS_DATA: Product[] = [
     stockCount: 7,
     badge: "Festive Ready",
     colors: ["Rose Taupe", "Midnight Teal"],
+    colorVariants: [
+      { name: "Rose Taupe", inStock: true },
+      { name: "Midnight Teal", inStock: false },
+    ],
     materials: ["Tussar Raw Silk", "Matte Gold Micro-Sequins"],
     gradient: "from-[#EBE0E3] via-[#D8C7CC] to-[#C9B3BA]",
     images: ["/images/products/raw-silk-jacket.jpg"],

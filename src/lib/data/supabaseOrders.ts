@@ -2,6 +2,45 @@ import { createBrowserClient } from "@/lib/supabase/client";
 import { SupabaseOrder, SupabaseOrderItem } from "@/lib/types/supabase";
 import { AdminOrderRecord, OrderStatus, INITIAL_MOCK_ORDERS } from "./adminOrders";
 
+interface LogisticsMeta {
+  courierName?: string;
+  trackingNumber?: string;
+  courierNotes?: string;
+}
+
+function parseOrderNotes(rawNotes?: string | null): {
+  cleanNotes?: string;
+  logistics?: LogisticsMeta;
+} {
+  if (!rawNotes) return {};
+  const metaRegex = /<!--ADORN_LOGISTICS:(.*?)-->/;
+  const match = rawNotes.match(metaRegex);
+  if (match && match[1]) {
+    try {
+      const logistics: LogisticsMeta = JSON.parse(match[1]);
+      const cleanNotes = rawNotes.replace(metaRegex, "").trim();
+      return {
+        cleanNotes: cleanNotes || undefined,
+        logistics,
+      };
+    } catch {
+      // Fallback
+    }
+  }
+  return { cleanNotes: rawNotes };
+}
+
+export function encodeOrderNotes(
+  cleanNotes: string = "",
+  logistics?: LogisticsMeta
+): string {
+  if (!logistics || (!logistics.courierName && !logistics.trackingNumber && !logistics.courierNotes)) {
+    return cleanNotes.trim();
+  }
+  const clean = cleanNotes ? cleanNotes.trim() + "\n\n" : "";
+  return `${clean}<!--ADORN_LOGISTICS:${JSON.stringify(logistics)}-->`;
+}
+
 export async function fetchSupabaseOrders(): Promise<AdminOrderRecord[]> {
   try {
     const supabase = createBrowserClient();
@@ -22,7 +61,10 @@ export async function fetchSupabaseOrders(): Promise<AdminOrderRecord[]> {
         price: item.price,
         quantity: item.quantity,
         gradient: "from-[#F7E7CE] via-[#FCEADE] to-[#F3D1DC]",
+        imageUrl: item.image_url || undefined,
       }));
+
+      const { cleanNotes, logistics } = parseOrderNotes(ord.notes);
 
       return {
         orderId: ord.order_number,
@@ -34,7 +76,7 @@ export async function fetchSupabaseOrders(): Promise<AdminOrderRecord[]> {
           deliveryZone: ord.delivery_zone,
           address: ord.address,
           city: ord.city,
-          notes: ord.notes || undefined,
+          notes: cleanNotes,
         },
         items: items.length > 0 ? items : [
           {
@@ -60,6 +102,9 @@ export async function fetchSupabaseOrders(): Promise<AdminOrderRecord[]> {
           ord.delivery_zone === "inside_dhaka"
             ? "24 to 48 Hours (Dhaka Metro Express)"
             : "3 to 5 Business Days (Nationwide Courier)",
+        courierName: logistics?.courierName,
+        trackingNumber: logistics?.trackingNumber,
+        courierNotes: logistics?.courierNotes,
       };
     });
   } catch (err) {
@@ -70,13 +115,21 @@ export async function fetchSupabaseOrders(): Promise<AdminOrderRecord[]> {
 
 export async function updateSupabaseOrderStatus(
   orderNumber: string,
-  newStatus: OrderStatus
+  newStatus: OrderStatus,
+  logistics?: LogisticsMeta,
+  existingCustomerNotes?: string
 ): Promise<boolean> {
   try {
     const supabase = createBrowserClient();
+    const updatePayload: Record<string, any> = { status: newStatus };
+
+    if (logistics) {
+      updatePayload.notes = encodeOrderNotes(existingCustomerNotes || "", logistics);
+    }
+
     const { error } = await supabase
       .from("orders")
-      .update({ status: newStatus })
+      .update(updatePayload)
       .eq("order_number", orderNumber);
 
     if (error) {
@@ -86,6 +139,39 @@ export async function updateSupabaseOrderStatus(
     return true;
   } catch (err) {
     console.error("updateSupabaseOrderStatus exception:", err);
+    return false;
+  }
+}
+
+export async function deleteSupabaseOrder(orderNumber: string): Promise<boolean> {
+  try {
+    const supabase = createBrowserClient();
+
+    // First find order ID to delete associated order_items
+    const { data: orderData } = await supabase
+      .from("orders")
+      .select("id")
+      .eq("order_number", orderNumber)
+      .single();
+
+    if (orderData?.id) {
+      // Delete child order items first
+      await supabase.from("order_items").delete().eq("order_id", orderData.id);
+    }
+
+    // Delete order row
+    const { error } = await supabase
+      .from("orders")
+      .delete()
+      .eq("order_number", orderNumber);
+
+    if (error) {
+      console.error("Supabase delete order error:", error);
+      return false;
+    }
+    return true;
+  } catch (err) {
+    console.error("deleteSupabaseOrder exception:", err);
     return false;
   }
 }

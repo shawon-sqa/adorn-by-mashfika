@@ -119,15 +119,27 @@ export function Footer() {
             <div className="space-y-2.5 text-sm text-zinc-400">
               <div className="flex items-start space-x-2.5">
                 <MapPin className="h-4 w-4 text-brand-champagne flex-shrink-0 mt-0.5" />
-                <span>Gulshan-2 / Banani, Dhaka, Bangladesh</span>
+                <span>Dhaka, Bangladesh</span>
               </div>
               <div className="flex items-center space-x-2.5">
                 <Phone className="h-4 w-4 text-brand-champagne flex-shrink-0" />
-                <span>+880 1700-000000 (WhatsApp available)</span>
+                <a
+                  href="https://wa.me/8801353655433"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="hover:text-brand-champagne transition-colors"
+                >
+                  01353655433 (WhatsApp available)
+                </a>
               </div>
               <div className="flex items-center space-x-2.5">
                 <Mail className="h-4 w-4 text-brand-champagne flex-shrink-0" />
-                <span>hello@adornbymashfika.com</span>
+                <a
+                  href="mailto:adornbymashfika@gmail.com"
+                  className="hover:text-brand-champagne transition-colors"
+                >
+                  adornbymashfika@gmail.com
+                </a>
               </div>
             </div>
             <div className="pt-2">

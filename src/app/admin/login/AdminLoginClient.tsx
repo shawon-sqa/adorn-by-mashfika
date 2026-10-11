@@ -97,58 +97,58 @@ export function AdminLoginClient() {
   ];
 
   return (
-    <div className="min-h-screen w-full bg-[#FAF8F5] text-brand-charcoal flex items-center justify-center p-4 sm:p-6 lg:p-12 relative overflow-hidden">
+    <div className="min-h-screen w-full bg-[#FAF8F5] text-brand-charcoal flex items-center justify-center p-4 sm:p-6 lg:p-12 relative overflow-x-hidden">
       {/* Background ambient decorative shapes */}
-      <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-brand-blush rounded-full blur-3xl opacity-60 pointer-events-none -translate-x-1/3 -translate-y-1/3" />
-      <div className="absolute bottom-0 right-0 w-[600px] h-[600px] bg-[#FCEADE] rounded-full blur-3xl opacity-50 pointer-events-none translate-x-1/4 translate-y-1/4" />
+      <div className="absolute top-0 left-0 w-[450px] h-[450px] bg-brand-blush rounded-full blur-3xl opacity-50 pointer-events-none -translate-x-1/3 -translate-y-1/3" />
+      <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-[#FCEADE] rounded-full blur-3xl opacity-40 pointer-events-none translate-x-1/4 translate-y-1/4" />
 
       <div className="w-full max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-14 items-center relative z-10">
         {/* Left Column: Brand Showcase & Value Pillars (Desktop) */}
-        <div className="lg:col-span-6 space-y-8 py-4 sm:py-8">
+        <div className="lg:col-span-6 space-y-6 sm:space-y-8 py-2 sm:py-8">
           <div>
             {/* Monogram & Title */}
-            <div className="inline-flex items-center gap-3 mb-6">
-              <div className="w-12 h-12 rounded-2xl bg-brand-primary text-white font-serif text-2xl font-bold flex items-center justify-center shadow-md">
+            <div className="inline-flex items-center gap-3 mb-5 sm:mb-6">
+              <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-brand-primary text-white font-serif text-xl sm:text-2xl font-bold flex items-center justify-center shadow-md flex-shrink-0">
                 A
               </div>
               <div>
                 <h1 className="font-serif text-2xl sm:text-3xl text-brand-charcoal tracking-wide font-medium">
                   Adorn by Mashfika
                 </h1>
-                <p className="text-[11px] uppercase tracking-[0.25em] text-brand-primary font-semibold">
+                <p className="text-[10px] sm:text-[11px] uppercase tracking-[0.25em] text-brand-primary font-semibold">
                   Elegance in Every Detail
                 </p>
               </div>
             </div>
 
             {/* Admin Badge */}
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-brand-blush border border-brand-primary/20 text-brand-primary text-xs tracking-wider uppercase font-semibold mb-4 shadow-2xs">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-brand-blush border border-brand-primary/20 text-brand-primary text-xs tracking-wider uppercase font-semibold mb-3 sm:mb-4 shadow-2xs">
               <Sparkles className="w-3.5 h-3.5 text-brand-champagne" />
               ADMIN PORTAL
             </div>
 
-            <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl text-brand-charcoal leading-[1.18] tracking-tight">
+            <h2 className="font-serif text-2xl sm:text-4xl lg:text-5xl text-brand-charcoal leading-[1.2] tracking-tight">
               Manage Your Boutique <br />
               <span className="italic font-serif text-brand-primary">
                 with Confidence
               </span>
             </h2>
 
-            <p className="mt-4 text-sm sm:text-base text-zinc-600 font-light leading-relaxed max-w-xl">
+            <p className="mt-3 sm:mt-4 text-xs sm:text-base text-zinc-600 font-light leading-relaxed max-w-xl">
               Your all-in-one administration center to manage curated jewelry, accessories, inventory levels, customer orders, and sales performance.
             </p>
           </div>
 
           {/* 2x2 Feature Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 pt-1 sm:pt-2">
             {features.map((item) => {
               const Icon = item.icon;
               return (
                 <div
                   key={item.title}
-                  className="bg-white/80 backdrop-blur-xs p-5 rounded-2xl border border-brand-border/80 shadow-2xs hover:shadow-xs transition-shadow"
+                  className="bg-white/80 backdrop-blur-xs p-4 sm:p-5 rounded-2xl border border-brand-border/80 shadow-2xs hover:shadow-xs transition-shadow"
                 >
-                  <div className="w-9 h-9 rounded-xl bg-brand-blush text-brand-primary flex items-center justify-center mb-3">
+                  <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-brand-blush text-brand-primary flex items-center justify-center mb-2.5 sm:mb-3">
                     <Icon className="w-4 h-4" />
                   </div>
                   <h3 className="font-semibold text-xs text-brand-charcoal">
@@ -162,7 +162,7 @@ export function AdminLoginClient() {
             })}
           </div>
 
-          <div className="pt-2">
+          <div className="pt-1 sm:pt-2">
             <Link
               href="/"
               className="inline-flex items-center gap-2 text-xs font-medium text-brand-primary hover:text-brand-primary-hover hover:underline"
@@ -173,8 +173,8 @@ export function AdminLoginClient() {
         </div>
 
         {/* Right Column: Floating Luxury Sign-In Card */}
-        <div className="lg:col-span-6 flex justify-center">
-          <div className="w-full max-w-md bg-white rounded-3xl p-8 sm:p-10 border border-brand-border/80 shadow-xl relative backdrop-blur-xs space-y-6">
+        <div className="lg:col-span-6 flex justify-center w-full">
+          <div className="w-full max-w-full sm:max-w-md bg-white rounded-3xl p-6 sm:p-10 border border-brand-border/80 shadow-xl relative backdrop-blur-xs space-y-5 sm:space-y-6">
             {/* Header in card */}
             <div className="text-center space-y-2">
               <div className="w-14 h-14 rounded-2xl bg-brand-blush text-brand-primary flex items-center justify-center mx-auto shadow-inner">

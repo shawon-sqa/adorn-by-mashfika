@@ -11,6 +11,9 @@ import {
   AlertCircle,
   ArrowLeft,
   Lock,
+  Plus,
+  Minus,
+  Trash2,
 } from "lucide-react";
 import { useCartStore } from "@/lib/store/useCartStore";
 import { formatPrice } from "@/lib/utils/formatters";
@@ -21,8 +24,9 @@ export default function CheckoutPage() {
   const [mounted, setMounted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
+  const [stockNotice, setStockNotice] = useState<string | null>(null);
 
-  const { items, getSubtotal, clearCart } = useCartStore();
+  const { items, getSubtotal, clearCart, updateQuantity, removeItem } = useCartStore();
 
   const [formData, setFormData] = useState({
     fullName: "",
@@ -158,6 +162,7 @@ export default function CheckoutPage() {
         quantity: item.quantity,
         selectedColor: item.selectedColor,
         gradient: item.product.gradient,
+        imageUrl: item.product.images?.[0] || undefined,
       })),
       payment: {
         method: formData.paymentMethod,
@@ -208,7 +213,7 @@ export default function CheckoutPage() {
           order_id: insertedOrder.id,
           product_id: item.product.id,
           product_title: item.selectedColor
-            ? `${item.product.title} (${item.selectedColor})`
+            ? `${item.product.title} (Color: ${item.selectedColor})`
             : item.product.title,
           price: item.product.price,
           quantity: item.quantity,
@@ -278,7 +283,7 @@ export default function CheckoutPage() {
                 </label>
                 <input
                   type="text"
-                  placeholder="e.g. Mashfika Rahman"
+                  placeholder="Enter your full name (e.g., Mashfika Rahman)"
                   value={formData.fullName}
                   onChange={(e) => handleInputChange("fullName", e.target.value)}
                   className={`w-full px-4 py-3 rounded-xl border text-sm focus:outline-none transition-colors ${
@@ -301,7 +306,7 @@ export default function CheckoutPage() {
                 </label>
                 <input
                   type="tel"
-                  placeholder="017XXXXXXXX (11 digits)"
+                  placeholder="Enter your 11-digit mobile number (e.g., 017XXXXXXXX)"
                   value={formData.phone}
                   onChange={(e) => handleInputChange("phone", e.target.value)}
                   className={`w-full px-4 py-3 rounded-xl border text-sm focus:outline-none transition-colors ${
@@ -374,7 +379,7 @@ export default function CheckoutPage() {
                 </label>
                 <textarea
                   rows={3}
-                  placeholder="House number, road number, flat/apt, area, prominent landmark..."
+                  placeholder="House no., Road no., Area / Thana"
                   value={formData.address}
                   onChange={(e) => handleInputChange("address", e.target.value)}
                   className={`w-full px-4 py-3 rounded-xl border text-sm focus:outline-none transition-colors ${
@@ -397,7 +402,7 @@ export default function CheckoutPage() {
                 </label>
                 <input
                   type="text"
-                  placeholder="e.g. Dhaka / Chittagong / Sylhet"
+                  placeholder="Select or enter your city"
                   value={formData.city}
                   onChange={(e) => handleInputChange("city", e.target.value)}
                   className={`w-full px-4 py-3 rounded-xl border text-sm focus:outline-none transition-colors ${
@@ -420,7 +425,7 @@ export default function CheckoutPage() {
                 </label>
                 <input
                   type="text"
-                  placeholder="Any delivery instructions or gift note..."
+                  placeholder="Any special delivery instructions (optional)"
                   value={formData.notes}
                   onChange={(e) => handleInputChange("notes", e.target.value)}
                   className="w-full px-4 py-3 rounded-xl border border-brand-border focus:border-brand-primary bg-brand-ivory/20 text-sm focus:outline-none"
@@ -518,7 +523,7 @@ export default function CheckoutPage() {
                       </label>
                       <input
                         type="tel"
-                        placeholder="01XXXXXXXXX"
+                        placeholder="Enter your 11-digit mobile number (e.g., 017XXXXXXXX)"
                         value={formData.bkashSenderPhone}
                         onChange={(e) => handleInputChange("bkashSenderPhone", e.target.value)}
                         className="w-full px-3.5 py-2.5 rounded-xl border border-brand-border bg-white text-xs focus:outline-none focus:border-brand-primary"
@@ -553,32 +558,141 @@ export default function CheckoutPage() {
         {/* Right Column: Order Summary & Placement */}
         <div className="lg:col-span-5">
           <div className="bg-white rounded-3xl p-6 sm:p-8 border border-brand-border/80 shadow-xs space-y-6 sticky top-28">
-            <h2 className="font-serif text-xl text-brand-charcoal">Order Summary</h2>
+            <div className="flex items-center justify-between">
+              <h2 className="font-serif text-xl text-brand-charcoal">Order Summary</h2>
+              <span className="text-xs text-brand-primary font-semibold">
+                {items.reduce((acc, i) => acc + i.quantity, 0)} item{items.reduce((acc, i) => acc + i.quantity, 0) !== 1 ? "s" : ""}
+              </span>
+            </div>
 
-            {/* Items review */}
-            <div className="divide-y divide-brand-border/60 max-h-72 overflow-y-auto pr-1">
-              {items.map((item, idx) => (
-                <div key={idx} className="py-3 first:pt-0 flex items-center gap-3">
-                  <div
-                    className={`w-14 h-14 rounded-xl bg-gradient-to-tr ${item.product.gradient} border border-brand-border/60 flex-shrink-0 flex items-center justify-center p-1 text-center`}
-                  >
-                    <span className="font-serif text-[9px] text-zinc-700 italic line-clamp-2">
-                      {item.product.title}
-                    </span>
+            {/* Temporary Stock Notice Banner */}
+            {stockNotice && (
+              <div className="p-2.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-xs flex items-center gap-2 animate-in fade-in">
+                <AlertCircle className="w-4 h-4 text-amber-600 flex-shrink-0" />
+                <span>{stockNotice}</span>
+              </div>
+            )}
+
+            {/* Items review with Quantity Modifiers */}
+            <div className="divide-y divide-brand-border/60 max-h-80 overflow-y-auto pr-1">
+              {items.map((item, idx) => {
+                const maxStock = item.product.stockCount ?? (item.product.inStock ? 99 : 0);
+                const isAtMaxStock = item.quantity >= maxStock;
+
+                return (
+                  <div key={idx} className="py-3.5 first:pt-0 flex items-center gap-3">
+                    <div className="w-14 h-14 rounded-xl border border-brand-border/60 flex-shrink-0 overflow-hidden relative bg-brand-ivory flex items-center justify-center">
+                      {item.product.images && item.product.images[0] ? (
+                        <img
+                          src={item.product.images[0]}
+                          alt={item.product.title}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div
+                          className={`w-full h-full bg-gradient-to-tr ${item.product.gradient} flex items-center justify-center p-1 text-center`}
+                        >
+                          <span className="font-serif text-[9px] text-zinc-700 italic line-clamp-2">
+                            {item.product.title}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-serif text-xs text-brand-charcoal truncate font-medium">
+                        {item.product.title}
+                      </h4>
+                      <div className="flex items-center gap-1.5 mt-0.5">
+                        <span className="text-[11px] text-zinc-400">
+                          {formatPrice(item.product.price)} each
+                        </span>
+                        {item.selectedColor && (
+                          <span className="text-[10px] font-medium bg-brand-blush text-brand-primary px-1.5 py-0.2 rounded border border-brand-primary/20">
+                            {item.selectedColor}
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Interactive Quantity Adjuster */}
+                      <div className="flex items-center gap-2 mt-2">
+                        <div className="inline-flex items-center rounded-lg border border-brand-border bg-brand-ivory/40 p-0.5">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (item.quantity === 1) {
+                                const confirmRemove = window.confirm(
+                                  `Remove "${item.product.title}" from your order?`
+                                );
+                                if (confirmRemove) {
+                                  removeItem(item.product.id, item.selectedColor);
+                                }
+                              } else {
+                                updateQuantity(item.product.id, item.quantity - 1, item.selectedColor);
+                              }
+                            }}
+                            title={item.quantity === 1 ? "Remove item" : "Decrease quantity"}
+                            className="w-6 h-6 flex items-center justify-center rounded text-brand-charcoal hover:bg-white hover:text-brand-primary transition-colors cursor-pointer"
+                          >
+                            {item.quantity === 1 ? (
+                              <Trash2 className="w-3 h-3 text-red-500" />
+                            ) : (
+                              <Minus className="w-3 h-3" />
+                            )}
+                          </button>
+
+                          <span className="w-7 text-center font-semibold text-xs text-brand-charcoal">
+                            {item.quantity}
+                          </span>
+
+                          <button
+                            type="button"
+                            disabled={isAtMaxStock}
+                            onClick={() => {
+                              const res = updateQuantity(
+                                item.product.id,
+                                item.quantity + 1,
+                                item.selectedColor
+                              );
+                              if (!res.success && res.message) {
+                                setStockNotice(res.message);
+                                setTimeout(() => setStockNotice(null), 3500);
+                              }
+                            }}
+                            title={isAtMaxStock ? "Max stock reached" : "Increase quantity"}
+                            className="w-6 h-6 flex items-center justify-center rounded text-brand-charcoal hover:bg-white hover:text-brand-primary transition-colors disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+                          >
+                            <Plus className="w-3 h-3" />
+                          </button>
+                        </div>
+
+                        {/* Direct remove button */}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const confirmRemove = window.confirm(
+                              `Remove "${item.product.title}" from your order?`
+                            );
+                            if (confirmRemove) {
+                              removeItem(item.product.id, item.selectedColor);
+                            }
+                          }}
+                          className="text-[11px] text-zinc-400 hover:text-red-500 transition-colors p-1"
+                          title="Remove item"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="text-right">
+                      <span className="font-semibold text-xs text-brand-charcoal block">
+                        {formatPrice(item.product.price * item.quantity)}
+                      </span>
+                    </div>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <h4 className="font-serif text-xs text-brand-charcoal truncate font-medium">
-                      {item.product.title}
-                    </h4>
-                    <p className="text-[11px] text-zinc-400 mt-0.5">
-                      Qty: {item.quantity} {item.selectedColor ? `• ${item.selectedColor}` : ""}
-                    </p>
-                  </div>
-                  <span className="font-semibold text-xs text-brand-charcoal">
-                    {formatPrice(item.product.price * item.quantity)}
-                  </span>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             {/* Calculations Breakdown */}

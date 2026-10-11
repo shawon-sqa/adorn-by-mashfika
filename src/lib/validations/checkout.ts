@@ -66,6 +66,7 @@ export interface OrderRecord {
     quantity: number;
     selectedColor?: string;
     gradient: string;
+    imageUrl?: string;
   }[];
   payment: {
     method: "cod" | "bkash_manual";

@@ -6,17 +6,30 @@ import { ArrowRight, Sparkles, ShieldCheck, Truck, Clock } from "lucide-react";
 import { Product } from "@/lib/types/product";
 import { fetchSupabaseProducts } from "@/lib/data/supabaseProducts";
 import { ProductCard } from "@/components/storefront/ProductCard";
+import { matchesCategory, CategoryFilter } from "@/app/(storefront)/shop/page";
 
 export default function HomePage() {
-  const [featured, setFeatured] = useState<Product[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [activeCategory, setActiveCategory] = useState<CategoryFilter>("all");
 
   useEffect(() => {
-    async function loadFeatured() {
+    async function loadCatalog() {
       const all = await fetchSupabaseProducts();
-      setFeatured(all.slice(0, 3));
+      setProducts(all);
     }
-    loadFeatured();
+    loadCatalog();
   }, []);
+
+  const homeCategories: { label: string; value: CategoryFilter }[] = [
+    { label: "All Collections", value: "all" },
+    { label: "Necklaces", value: "necklaces" },
+    { label: "Earrings", value: "earrings" },
+    { label: "Bangles", value: "bangles" },
+    { label: "Bridal Sets", value: "bridal" },
+    { label: "Fashion", value: "fashion" },
+  ];
+
+  const displayedProducts = products.filter((p) => matchesCategory(p, activeCategory));
 
   return (
     <div className="w-full">
@@ -97,31 +110,79 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Featured Collection Preview from Supabase */}
+      {/* All Collections & Dynamic Category Filtering Section from Supabase */}
       <section className="py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-12">
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 gap-4">
           <div>
             <span className="text-xs font-semibold tracking-widest uppercase text-brand-primary block mb-2">
               Curated by Mashfika
             </span>
             <h2 className="font-serif text-3xl sm:text-4xl text-brand-charcoal">
-              Featured Highlights
+              All Collections
             </h2>
+            <p className="text-xs sm:text-sm text-zinc-500 mt-1">
+              Handpicked creations crafted with unmatched precision and timeless poise.
+            </p>
           </div>
           <Link
             href="/shop"
-            className="mt-4 sm:mt-0 text-sm font-medium text-brand-primary hover:text-brand-primary-hover flex items-center gap-1 group"
+            className="text-sm font-medium text-brand-primary hover:text-brand-primary-hover flex items-center gap-1 group whitespace-nowrap self-start sm:self-auto"
           >
-            View all creations
+            View all creations ({products.length})
             <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
           </Link>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {featured.map((item) => (
-            <ProductCard key={item.id} product={item} />
+        {/* Category Filter Pills */}
+        <div className="flex items-center gap-2 overflow-x-auto pb-4 mb-8 scrollbar-none">
+          {homeCategories.map((cat) => (
+            <button
+              key={cat.value}
+              onClick={() => setActiveCategory(cat.value)}
+              className={`px-5 py-2.5 rounded-full text-xs font-semibold tracking-wide transition-all cursor-pointer whitespace-nowrap ${
+                activeCategory === cat.value
+                  ? "bg-brand-primary text-white shadow-sm ring-2 ring-brand-primary/20 scale-[1.02]"
+                  : "bg-white border border-brand-border text-brand-charcoal hover:bg-brand-blush hover:border-brand-primary/30"
+              }`}
+            >
+              {cat.label}
+            </button>
           ))}
         </div>
+
+        {/* Real-time Grid without jitter */}
+        {displayedProducts.length === 0 ? (
+          <div className="bg-white rounded-3xl border border-brand-border/60 py-16 px-4 text-center">
+            <p className="font-serif text-lg text-brand-charcoal">No creations found in this collection</p>
+            <p className="text-xs text-zinc-400 mt-1">
+              Explore our other artisanal collections or view the full boutique catalog.
+            </p>
+            <button
+              onClick={() => setActiveCategory("all")}
+              className="mt-4 px-6 py-2 rounded-full bg-brand-blush text-brand-primary text-xs font-semibold hover:bg-brand-primary hover:text-white transition-colors"
+            >
+              View All Collections
+            </button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 min-h-[300px]">
+            {displayedProducts.slice(0, 6).map((item) => (
+              <ProductCard key={item.id} product={item} />
+            ))}
+          </div>
+        )}
+
+        {displayedProducts.length > 6 && (
+          <div className="mt-12 text-center">
+            <Link
+              href={`/shop?category=${activeCategory}`}
+              className="inline-flex items-center gap-2 px-8 py-3 rounded-full bg-white border border-brand-border hover:border-brand-primary text-brand-charcoal hover:text-brand-primary text-xs font-semibold tracking-wider uppercase transition-all shadow-xs"
+            >
+              Explore All {activeCategory !== "all" ? homeCategories.find((c) => c.value === activeCategory)?.label : ""} ({displayedProducts.length})
+              <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+          </div>
+        )}
       </section>
     </div>
   );

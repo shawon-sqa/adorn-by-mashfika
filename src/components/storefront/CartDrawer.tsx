@@ -113,12 +113,22 @@ export function CartDrawer() {
             items.map((item, idx) => (
               <div key={`${item.product.id}-${item.selectedColor}-${idx}`} className="pt-4 first:pt-0 flex gap-4">
                 {/* Visual Thumbnail */}
-                <div
-                  className={`w-20 h-20 rounded-xl bg-gradient-to-tr ${item.product.gradient} flex-shrink-0 flex items-center justify-center border border-brand-border/60 p-2 text-center`}
-                >
-                  <span className="font-serif text-[11px] text-zinc-700/70 italic line-clamp-2">
-                    {item.product.title}
-                  </span>
+                <div className="w-20 h-20 rounded-xl border border-brand-border/60 flex-shrink-0 overflow-hidden relative bg-brand-ivory flex items-center justify-center">
+                  {item.product.images && item.product.images[0] ? (
+                    <img
+                      src={item.product.images[0]}
+                      alt={item.product.title}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div
+                      className={`w-full h-full bg-gradient-to-tr ${item.product.gradient} flex items-center justify-center p-2 text-center`}
+                    >
+                      <span className="font-serif text-[11px] text-zinc-700/70 italic line-clamp-2">
+                        {item.product.title}
+                      </span>
+                    </div>
+                  )}
                 </div>
 
                 {/* Details */}
@@ -129,9 +139,11 @@ export function CartDrawer() {
                         {item.product.title}
                       </h4>
                       {item.selectedColor && (
-                        <p className="text-[11px] text-brand-muted mt-0.5">
-                          Color: <span className="text-zinc-700 font-medium">{item.selectedColor}</span>
-                        </p>
+                        <div className="mt-1">
+                          <span className="inline-flex items-center text-[10px] font-medium bg-brand-blush text-brand-primary px-2 py-0.5 rounded-full border border-brand-primary/20">
+                            Color: {item.selectedColor}
+                          </span>
+                        </div>
                       )}
                     </div>
                     <button

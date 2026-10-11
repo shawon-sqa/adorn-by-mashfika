@@ -11,7 +11,11 @@ import {
 } from "lucide-react";
 import { createBrowserClient } from "@/lib/supabase/client";
 
-export function AdminSidebarNav() {
+interface AdminSidebarNavProps {
+  onNavigate?: () => void;
+}
+
+export function AdminSidebarNav({ onNavigate }: AdminSidebarNavProps = {}) {
   const pathname = usePathname();
   const router = useRouter();
 
@@ -68,6 +72,7 @@ export function AdminSidebarNav() {
             <Link
               key={item.name}
               href={item.href}
+              onClick={onNavigate}
               className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-medium transition-all ${
                 item.active
                   ? "bg-brand-primary text-white shadow-sm font-semibold"

@@ -10,7 +10,7 @@ export interface SupabaseOrder {
   subtotal: number;
   delivery_fee: number;
   total: number;
-  status: "pending" | "confirmed" | "shipped" | "delivered" | "cancelled";
+  status: "draft" | "pending" | "confirmed" | "shipped" | "delivered" | "cancelled";
   bkash_sender?: string | null;
   bkash_trx_id?: string | null;
   notes?: string | null;

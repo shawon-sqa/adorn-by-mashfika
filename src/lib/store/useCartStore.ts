@@ -10,9 +10,9 @@ interface CartStore {
   openCart: () => void;
   closeCart: () => void;
   toggleCart: () => void;
-  addItem: (product: Product, quantity?: number, selectedColor?: string) => void;
+  addItem: (product: Product, quantity?: number, selectedColor?: string) => { success: boolean; message?: string };
   removeItem: (productId: string, selectedColor?: string) => void;
-  updateQuantity: (productId: string, quantity: number, selectedColor?: string) => void;
+  updateQuantity: (productId: string, quantity: number, selectedColor?: string) => { success: boolean; message?: string };
   clearCart: () => void;
   getTotalItems: () => number;
   getSubtotal: () => number;
@@ -29,40 +29,74 @@ export const useCartStore = create<CartStore>()(
       toggleCart: () => set((state) => ({ isOpen: !state.isOpen })),
 
       addItem: (product: Product, quantity = 1, selectedColor) => {
-        set((state) => {
-          const colorKey = selectedColor || product.colors[0] || "Standard";
-          const existingIndex = state.items.findIndex(
-            (i) => i.product.id === product.id && i.selectedColor === colorKey
+        const colorKey = selectedColor || product.colors[0] || "Standard";
+
+        // Check if selected color variant is explicitly marked out of stock
+        if (product.colorVariants && product.colorVariants.length > 0) {
+          const variant = product.colorVariants.find(
+            (v) => v.name.toLowerCase() === colorKey.toLowerCase()
           );
-
-          let updatedItems: CartItem[];
-
-          if (existingIndex > -1) {
-            updatedItems = state.items.map((item, index) => {
-              if (index === existingIndex) {
-                return {
-                  ...item,
-                  quantity: item.quantity + quantity,
-                };
-              }
-              return item;
-            });
-          } else {
-            updatedItems = [
-              ...state.items,
-              {
-                product,
-                quantity,
-                selectedColor: colorKey,
-              },
-            ];
+          if (variant && !variant.inStock) {
+            return {
+              success: false,
+              message: `Sorry, ${product.title} in "${colorKey}" is currently sold out.`,
+            };
           }
+        }
 
+        // Check overall product stock
+        const availableStock = product.stockCount ?? (product.inStock ? 99 : 0);
+        if (availableStock <= 0 || !product.inStock) {
           return {
-            items: updatedItems,
-            isOpen: true, // Automatically open cart drawer to give immediate feedback
+            success: false,
+            message: `Sorry, "${product.title}" is currently sold out.`,
           };
+        }
+
+        const state = get();
+        const existingIndex = state.items.findIndex(
+          (i) => i.product.id === product.id && i.selectedColor === colorKey
+        );
+
+        const currentQtyInCart = existingIndex > -1 ? state.items[existingIndex].quantity : 0;
+        const requestedTotalQty = currentQtyInCart + quantity;
+
+        if (requestedTotalQty > availableStock) {
+          return {
+            success: false,
+            message: `Only ${availableStock} unit(s) of "${product.title}" available in stock.`,
+          };
+        }
+
+        let updatedItems: CartItem[];
+
+        if (existingIndex > -1) {
+          updatedItems = state.items.map((item, index) => {
+            if (index === existingIndex) {
+              return {
+                ...item,
+                quantity: requestedTotalQty,
+              };
+            }
+            return item;
+          });
+        } else {
+          updatedItems = [
+            ...state.items,
+            {
+              product,
+              quantity,
+              selectedColor: colorKey,
+            },
+          ];
+        }
+
+        set({
+          items: updatedItems,
+          isOpen: true,
         });
+
+        return { success: true };
       },
 
       removeItem: (productId: string, selectedColor?: string) => {
@@ -78,11 +112,28 @@ export const useCartStore = create<CartStore>()(
       updateQuantity: (productId: string, quantity: number, selectedColor?: string) => {
         if (quantity <= 0) {
           get().removeItem(productId, selectedColor);
-          return;
+          return { success: true };
         }
 
-        set((state) => ({
-          items: state.items.map((item) => {
+        const state = get();
+        const itemToUpdate = state.items.find((item) => {
+          const matchesId = item.product.id === productId;
+          const matchesColor = selectedColor ? item.selectedColor === selectedColor : true;
+          return matchesId && matchesColor;
+        });
+
+        if (itemToUpdate) {
+          const maxStock = itemToUpdate.product.stockCount ?? (itemToUpdate.product.inStock ? 99 : 0);
+          if (quantity > maxStock) {
+            return {
+              success: false,
+              message: `Cannot add more than ${maxStock} unit(s) in stock.`,
+            };
+          }
+        }
+
+        set((s) => ({
+          items: s.items.map((item) => {
             const matchesId = item.product.id === productId;
             const matchesColor = selectedColor ? item.selectedColor === selectedColor : true;
             if (matchesId && matchesColor) {
@@ -91,6 +142,8 @@ export const useCartStore = create<CartStore>()(
             return item;
           }),
         }));
+
+        return { success: true };
       },
 
       clearCart: () => set({ items: [] }),

@@ -14,10 +14,14 @@ import {
 import { getAdminOrders, AdminOrderRecord } from "@/lib/data/adminOrders";
 import { fetchSupabaseOrders } from "@/lib/data/supabaseOrders";
 import { getAdminProducts } from "@/lib/data/adminProducts";
+import { getAbandonedCarts, AbandonedCartLead } from "@/lib/data/abandonedCarts";
+import { AbandonedCartSection } from "@/components/admin/AbandonedCartSection";
+import { AdminAnalyticsChart } from "@/components/admin/AdminAnalyticsChart";
 import { formatPrice } from "@/lib/utils/formatters";
 
 export default function AdminDashboardPage() {
   const [orders, setOrders] = useState<AdminOrderRecord[]>([]);
+  const [abandonedCarts, setAbandonedCarts] = useState<AbandonedCartLead[]>([]);
   const [productsCount, setProductsCount] = useState(0);
   const [lowStockCount, setLowStockCount] = useState(0);
 
@@ -32,6 +36,7 @@ export default function AdminDashboardPage() {
       const loadedProducts = getAdminProducts();
       setProductsCount(loadedProducts.length);
       setLowStockCount(loadedProducts.filter((p) => p.stockCount <= 5).length);
+      setAbandonedCarts(getAbandonedCarts());
     }
     loadData();
   }, []);
@@ -108,10 +113,10 @@ export default function AdminDashboardPage() {
         </div>
       </div>
 
-      {/* Metric Cards Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+      {/* Metric Cards Grid - Responsive Stacking: 1-col mobile, 2-col tablet, 4-col desktop */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
         {/* Total Revenue */}
-        <div className="bg-white p-6 rounded-2xl border border-brand-border/80 shadow-2xs">
+        <div className="bg-white p-5 sm:p-6 rounded-2xl border border-brand-border/80 shadow-2xs">
           <div className="flex items-center justify-between">
             <span className="text-xs font-medium text-zinc-500 uppercase tracking-wider">
               Total Revenue
@@ -131,7 +136,7 @@ export default function AdminDashboardPage() {
         </div>
 
         {/* Total Orders */}
-        <div className="bg-white p-6 rounded-2xl border border-brand-border/80 shadow-2xs">
+        <div className="bg-white p-5 sm:p-6 rounded-2xl border border-brand-border/80 shadow-2xs">
           <div className="flex items-center justify-between">
             <span className="text-xs font-medium text-zinc-500 uppercase tracking-wider">
               Total Orders
@@ -149,7 +154,7 @@ export default function AdminDashboardPage() {
         </div>
 
         {/* Pending Orders */}
-        <div className="bg-white p-6 rounded-2xl border border-brand-border/80 shadow-2xs">
+        <div className="bg-white p-5 sm:p-6 rounded-2xl border border-brand-border/80 shadow-2xs">
           <div className="flex items-center justify-between">
             <span className="text-xs font-medium text-zinc-500 uppercase tracking-wider">
               Pending Verification
@@ -169,7 +174,7 @@ export default function AdminDashboardPage() {
         </div>
 
         {/* Low Stock Warning */}
-        <div className="bg-white p-6 rounded-2xl border border-brand-border/80 shadow-2xs">
+        <div className="bg-white p-5 sm:p-6 rounded-2xl border border-brand-border/80 shadow-2xs">
           <div className="flex items-center justify-between">
             <span className="text-xs font-medium text-zinc-500 uppercase tracking-wider">
               Low Stock Alert
@@ -188,6 +193,9 @@ export default function AdminDashboardPage() {
           </p>
         </div>
       </div>
+
+      {/* Interactive Sales & Order Analytics Chart */}
+      <AdminAnalyticsChart orders={orders} />
 
       {/* Recent Orders Section */}
       <div className="bg-white rounded-2xl border border-brand-border/80 shadow-2xs overflow-hidden">
@@ -262,6 +270,9 @@ export default function AdminDashboardPage() {
           </table>
         </div>
       </div>
+
+      {/* Active Customer Carts & Follow-Ups Section */}
+      <AbandonedCartSection initialCarts={abandonedCarts} />
     </div>
   );
 }

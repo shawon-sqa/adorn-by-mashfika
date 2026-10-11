@@ -6,28 +6,90 @@ import { Product } from "@/lib/types/product";
 import { fetchSupabaseProducts } from "@/lib/data/supabaseProducts";
 import { ProductCard } from "@/components/storefront/ProductCard";
 
-type CategoryFilter = "all" | "jewelry" | "accessories" | "fashion";
+export type CategoryFilter =
+  | "all"
+  | "necklaces"
+  | "earrings"
+  | "bangles"
+  | "bridal"
+  | "fashion"
+  | "jewelry"
+  | "accessories";
+
 type SortOption = "featured" | "price-asc" | "price-desc";
 
-export default function ShopPage() {
+export function matchesCategory(product: Product, cat: string): boolean {
+  if (!cat || cat === "all") return true;
+  const pCat = (product.category || "").toLowerCase();
+  const text = `${product.title} ${product.subtitle} ${product.description} ${(product.materials || []).join(" ")}`.toLowerCase();
+
+  switch (cat) {
+    case "necklaces":
+      return pCat === "necklaces" || /necklace|choker|haar|pendant|dori/.test(text);
+    case "earrings":
+      return pCat === "earrings" || /earring|jhumka|jhumki|stud|chandelier/.test(text);
+    case "bangles":
+      return pCat === "bangles" || /bangle|bracelet|ring|kada|cuff/.test(text);
+    case "bridal":
+      return pCat === "bridal" || pCat === "bridal sets" || /bridal|wedding|kundan royal|choker set/.test(text);
+    case "fashion":
+      return pCat === "fashion" || /fashion|dupatta|kurti|jacket|silk|saree|dress/.test(text);
+    case "jewelry":
+      return pCat === "jewelry" || /jewelry|jewellery|gold|silver|necklace|earring|choker|jhumka|ring/.test(text);
+    case "accessories":
+      return pCat === "accessories" || /clutch|potli|comb|hair|bag|purse|accessory|accessories/.test(text);
+    default:
+      return pCat === cat || text.includes(cat.toLowerCase());
+  }
+}
+
+import { useSearchParams } from "next/navigation";
+import { Suspense } from "react";
+
+function ShopContent() {
+  const searchParams = useSearchParams();
+  const initialCategory = (searchParams.get("category") as CategoryFilter) || "all";
+  const initialQuery = searchParams.get("q") || "";
+
   const [products, setProducts] = useState<Product[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState<CategoryFilter>("all");
-  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState<CategoryFilter>(initialCategory);
+  const [searchQuery, setSearchQuery] = useState(initialQuery);
   const [sortBy, setSortBy] = useState<SortOption>("featured");
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const urlCategory = searchParams.get("category") as CategoryFilter;
+    if (urlCategory) {
+      setSelectedCategory(urlCategory);
+    }
+    const urlQuery = searchParams.get("q");
+    if (urlQuery !== null && urlQuery !== undefined) {
+      setSearchQuery(urlQuery);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     async function loadCatalog() {
-      const data = await fetchSupabaseProducts();
-      setProducts(data);
+      setIsLoading(true);
+      try {
+        const data = await fetchSupabaseProducts();
+        setProducts(data);
+      } finally {
+        setIsLoading(false);
+      }
     }
     loadCatalog();
   }, []);
 
-  const categories = [
-    { label: "All Collections", value: "all" as const },
-    { label: "Jewelry", value: "jewelry" as const },
-    { label: "Accessories", value: "accessories" as const },
-    { label: "Boutique Fashion", value: "fashion" as const },
+  const categories: { label: string; value: CategoryFilter }[] = [
+    { label: "All Collections", value: "all" },
+    { label: "Necklaces", value: "necklaces" },
+    { label: "Earrings", value: "earrings" },
+    { label: "Bangles & Rings", value: "bangles" },
+    { label: "Bridal Sets", value: "bridal" },
+    { label: "Boutique Fashion", value: "fashion" },
+    { label: "Jewelry", value: "jewelry" },
+    { label: "Accessories", value: "accessories" },
   ];
 
   const filteredProducts = useMemo(() => {
@@ -35,7 +97,7 @@ export default function ShopPage() {
 
     // Filter by Category
     if (selectedCategory !== "all") {
-      result = result.filter((p) => p.category === selectedCategory);
+      result = result.filter((p) => matchesCategory(p, selectedCategory));
     }
 
     // Filter by Search
@@ -58,7 +120,7 @@ export default function ShopPage() {
     }
 
     return result;
-  }, [selectedCategory, searchQuery, sortBy]);
+  }, [products, selectedCategory, searchQuery, sortBy]);
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 lg:py-16">
@@ -166,5 +228,22 @@ export default function ShopPage() {
         </>
       )}
     </div>
+  );
+}
+
+export default function ShopPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="max-w-7xl mx-auto px-4 py-20 text-center">
+          <div className="w-8 h-8 border-4 border-brand-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-xs uppercase tracking-widest text-brand-primary font-semibold">
+            Loading Catalog...
+          </p>
+        </div>
+      }
+    >
+      <ShopContent />
+    </Suspense>
   );
 }

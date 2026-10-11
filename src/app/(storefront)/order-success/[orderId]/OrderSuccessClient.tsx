@@ -118,20 +118,35 @@ export function OrderSuccessClient({ orderId }: OrderSuccessClientProps) {
                 {order.items.map((item, idx) => (
                   <div key={idx} className="py-4 flex items-center justify-between gap-4">
                     <div className="flex items-center gap-3">
-                      <div
-                        className={`w-14 h-14 rounded-xl bg-gradient-to-tr ${item.gradient} border border-brand-border/60 flex-shrink-0 flex items-center justify-center p-1 text-center`}
-                      >
-                        <span className="font-serif text-[9px] text-zinc-700 italic line-clamp-2">
-                          {item.title}
-                        </span>
+                      <div className="w-14 h-14 rounded-xl border border-brand-border/60 flex-shrink-0 overflow-hidden relative bg-brand-ivory flex items-center justify-center">
+                        {item.imageUrl || (item as any).image_url ? (
+                          <img
+                            src={item.imageUrl || (item as any).image_url}
+                            alt={item.title}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div
+                            className={`w-full h-full bg-gradient-to-tr ${item.gradient} flex items-center justify-center p-1 text-center`}
+                          >
+                            <span className="font-serif text-[9px] text-zinc-700 italic line-clamp-2">
+                              {item.title}
+                            </span>
+                          </div>
+                        )}
                       </div>
                       <div>
                         <h4 className="font-serif text-sm text-brand-charcoal font-medium">
                           {item.title}
                         </h4>
-                        <p className="text-xs text-zinc-500 mt-0.5">
-                          Qty: {item.quantity} {item.selectedColor ? `• ${item.selectedColor}` : ""}
-                        </p>
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className="text-xs text-zinc-500">Qty: {item.quantity}</span>
+                          {item.selectedColor && (
+                            <span className="text-[10px] font-medium bg-brand-blush text-brand-primary px-2 py-0.5 rounded-full border border-brand-primary/20">
+                              Color: {item.selectedColor}
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </div>
                     <span className="font-semibold text-sm text-brand-charcoal">

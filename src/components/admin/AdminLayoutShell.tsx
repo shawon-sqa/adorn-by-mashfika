@@ -12,9 +12,16 @@ import {
   ChevronDown,
   User,
   ShieldCheck,
+  Menu,
+  X,
 } from "lucide-react";
 import { AdminSidebarNav } from "@/components/admin/AdminSidebarNav";
+import { AdminNotificationCenter } from "@/components/admin/AdminNotificationCenter";
 import { createBrowserClient } from "@/lib/supabase/client";
+import { fetchSupabaseOrders } from "@/lib/data/supabaseOrders";
+import { getAdminOrders, AdminOrderRecord } from "@/lib/data/adminOrders";
+import { getAdminProducts } from "@/lib/data/adminProducts";
+import { Product } from "@/lib/types/product";
 
 export function AdminLayoutShell({
   children,
@@ -25,19 +32,27 @@ export function AdminLayoutShell({
   const pathname = usePathname();
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
+  const [orders, setOrders] = useState<AdminOrderRecord[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const isLoginPage = pathname === "/admin/login";
 
   useEffect(() => {
-    async function checkUser() {
+    async function checkUserAndMetrics() {
       const supabase = createBrowserClient();
       const { data } = await supabase.auth.getUser();
       if (data.user?.email) {
         setUserEmail(data.user.email);
       }
+
+      // Load metrics for Notification Center
+      const sbOrders = await fetchSupabaseOrders();
+      setOrders(sbOrders.length > 0 ? sbOrders : getAdminOrders());
+      setProducts(getAdminProducts());
     }
-    checkUser();
+    checkUserAndMetrics();
   }, []);
 
   // Close dropdown on outside click
@@ -56,11 +71,24 @@ export function AdminLayoutShell({
     };
   }, []);
 
+  // Prevent background scroll when mobile drawer is open
+  useEffect(() => {
+    if (mobileDrawerOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "unset";
+    }
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, [mobileDrawerOpen]);
+
   const handleSignOut = async () => {
     try {
       const supabase = createBrowserClient();
       await supabase.auth.signOut();
       setIsDropdownOpen(false);
+      setMobileDrawerOpen(false);
       router.push("/admin/login");
       router.refresh();
     } catch {
@@ -76,7 +104,7 @@ export function AdminLayoutShell({
   return (
     <div className="min-h-screen bg-[#F8F6F4] flex flex-col md:flex-row">
       {/* Sidebar for Desktop */}
-      <aside className="w-full md:w-64 bg-[#1C1A1A] text-white flex-shrink-0 flex flex-col border-r border-zinc-800">
+      <aside className="hidden md:flex w-64 bg-[#1C1A1A] text-white flex-shrink-0 flex-col border-r border-zinc-800">
         {/* Brand Header */}
         <div className="p-6 border-b border-zinc-800/80">
           <Link href="/admin" className="flex flex-col">
@@ -108,25 +136,77 @@ export function AdminLayoutShell({
         </div>
       </aside>
 
+      {/* Mobile Slide-Over Navigation Drawer */}
+      {mobileDrawerOpen && (
+        <div className="fixed inset-0 z-50 md:hidden flex animate-in fade-in duration-200">
+          <div
+            className="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity"
+            onClick={() => setMobileDrawerOpen(false)}
+          />
+          <div className="relative w-72 bg-[#1C1A1A] text-white h-full shadow-2xl flex flex-col justify-between z-10 animate-in slide-in-from-left duration-200">
+            <div>
+              <div className="p-5 border-b border-zinc-800 flex items-center justify-between">
+                <div>
+                  <span className="font-serif text-lg tracking-wide text-white block">
+                    Adorn by Mashfika
+                  </span>
+                  <span className="text-[9px] tracking-[0.2em] uppercase text-brand-champagne font-bold block">
+                    Admin Portal
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setMobileDrawerOpen(false)}
+                  className="p-1.5 text-zinc-400 hover:text-white rounded-lg hover:bg-zinc-800"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <AdminSidebarNav onNavigate={() => setMobileDrawerOpen(false)} />
+            </div>
+
+            <div className="p-4 border-t border-zinc-800 space-y-2">
+              <Link
+                href="/"
+                target="_blank"
+                onClick={() => setMobileDrawerOpen(false)}
+                className="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-medium text-zinc-300 hover:text-white bg-zinc-900 transition-colors"
+              >
+                <span className="flex items-center gap-2">
+                  <Sparkles className="w-3.5 h-3.5 text-brand-champagne" />
+                  View Storefront
+                </span>
+                <ExternalLink className="w-3.5 h-3.5 text-zinc-400" />
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Top Header Bar */}
-        <header className="h-16 bg-white border-b border-brand-border/80 px-6 sm:px-8 flex items-center justify-between sticky top-0 z-30 shadow-xs">
+        <header className="h-16 bg-white border-b border-brand-border/80 px-4 sm:px-8 flex items-center justify-between sticky top-0 z-30 shadow-xs">
           <div className="flex items-center gap-3">
-            <span className="text-xs font-semibold uppercase tracking-wider text-brand-primary bg-brand-blush px-3 py-1 rounded-full">
+            {/* Mobile Hamburger Button */}
+            <button
+              type="button"
+              onClick={() => setMobileDrawerOpen(true)}
+              className="md:hidden p-2 text-zinc-600 hover:text-brand-charcoal hover:bg-zinc-100 rounded-xl transition-colors cursor-pointer"
+              aria-label="Open Admin Menu"
+            >
+              <Menu className="w-5 h-5" />
+            </button>
+
+            <span className="text-xs font-semibold uppercase tracking-wider text-brand-primary bg-brand-blush px-3 py-1 rounded-full hidden sm:inline-block">
               Boutique Operations
             </span>
           </div>
 
-          <div className="flex items-center gap-4 sm:gap-6">
-            <button
-              type="button"
-              className="relative p-2 text-zinc-500 hover:text-brand-charcoal rounded-full hover:bg-zinc-100 transition-colors"
-              aria-label="Admin Notifications"
-            >
-              <Bell className="w-4 h-4" />
-              <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-brand-primary" />
-            </button>
+          <div className="flex items-center gap-2 sm:gap-4">
+            {/* Functional Notification Center Bell */}
+            <AdminNotificationCenter orders={orders} products={products} />
 
             {/* Interactive Professional Profile Dropdown */}
             <div className="relative pl-4 border-l border-brand-border" ref={dropdownRef}>
