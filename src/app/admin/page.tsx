@@ -12,6 +12,7 @@ import {
   Download,
 } from "lucide-react";
 import { getAdminOrders, AdminOrderRecord } from "@/lib/data/adminOrders";
+import { fetchSupabaseOrders } from "@/lib/data/supabaseOrders";
 import { getAdminProducts } from "@/lib/data/adminProducts";
 import { formatPrice } from "@/lib/utils/formatters";
 
@@ -21,11 +22,18 @@ export default function AdminDashboardPage() {
   const [lowStockCount, setLowStockCount] = useState(0);
 
   useEffect(() => {
-    const loadedOrders = getAdminOrders();
-    const loadedProducts = getAdminProducts();
-    setOrders(loadedOrders);
-    setProductsCount(loadedProducts.length);
-    setLowStockCount(loadedProducts.filter((p) => p.stockCount <= 5).length);
+    async function loadData() {
+      const sbOrders = await fetchSupabaseOrders();
+      if (sbOrders.length > 0) {
+        setOrders(sbOrders);
+      } else {
+        setOrders(getAdminOrders());
+      }
+      const loadedProducts = getAdminProducts();
+      setProductsCount(loadedProducts.length);
+      setLowStockCount(loadedProducts.filter((p) => p.stockCount <= 5).length);
+    }
+    loadData();
   }, []);
 
   const totalRevenue = orders.reduce((sum, ord) => sum + ord.pricing.grandTotal, 0);

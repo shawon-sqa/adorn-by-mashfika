@@ -8,6 +8,7 @@ import {
   AdminOrderRecord,
   OrderStatus,
 } from "@/lib/data/adminOrders";
+import { fetchSupabaseOrders } from "@/lib/data/supabaseOrders";
 import { formatPrice } from "@/lib/utils/formatters";
 
 export default function AdminOrdersListPage() {
@@ -16,7 +17,15 @@ export default function AdminOrdersListPage() {
   const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
-    setOrders(getAdminOrders());
+    async function loadOrders() {
+      const sbOrders = await fetchSupabaseOrders();
+      if (sbOrders.length > 0) {
+        setOrders(sbOrders);
+      } else {
+        setOrders(getAdminOrders());
+      }
+    }
+    loadOrders();
   }, []);
 
   const statuses = [

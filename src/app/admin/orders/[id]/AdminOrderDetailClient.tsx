@@ -21,6 +21,10 @@ import {
   AdminOrderRecord,
   OrderStatus,
 } from "@/lib/data/adminOrders";
+import {
+  fetchSupabaseOrders,
+  updateSupabaseOrderStatus,
+} from "@/lib/data/supabaseOrders";
 import { formatPrice } from "@/lib/utils/formatters";
 
 interface AdminOrderDetailClientProps {
@@ -38,14 +42,29 @@ export function AdminOrderDetailClient({ orderId }: AdminOrderDetailClientProps)
 
   useEffect(() => {
     if (!orderId) return;
-    const orders = getAdminOrders();
-    const found = orders.find((o) => o.orderId === orderId);
-    if (found) {
-      setOrder(found);
-      setCourierInput(found.courierName || "");
-      setTrackingInput(found.trackingNumber || "");
+    async function loadSingleOrder() {
+      // Check Supabase first
+      const sbOrders = await fetchSupabaseOrders();
+      const sbFound = sbOrders.find((o) => o.orderId === orderId);
+      if (sbFound) {
+        setOrder(sbFound);
+        setCourierInput(sbFound.courierName || "");
+        setTrackingInput(sbFound.trackingNumber || "");
+        setLoading(false);
+        return;
+      }
+
+      // Check local storage fallback
+      const orders = getAdminOrders();
+      const found = orders.find((o) => o.orderId === orderId);
+      if (found) {
+        setOrder(found);
+        setCourierInput(found.courierName || "");
+        setTrackingInput(found.trackingNumber || "");
+      }
+      setLoading(false);
     }
-    setLoading(false);
+    loadSingleOrder();
   }, [orderId]);
 
   if (loading) {
@@ -73,7 +92,11 @@ export function AdminOrderDetailClient({ orderId }: AdminOrderDetailClientProps)
     );
   }
 
-  const handleStatusChange = (newStatus: OrderStatus) => {
+  const handleStatusChange = async (newStatus: OrderStatus) => {
+    // 1. Update in Supabase cloud
+    await updateSupabaseOrderStatus(order.orderId, newStatus);
+
+    // 2. Update in local storage
     const updated = updateAdminOrderStatus(
       order.orderId,
       newStatus,
@@ -81,7 +104,11 @@ export function AdminOrderDetailClient({ orderId }: AdminOrderDetailClientProps)
       trackingInput
     );
     const found = updated.find((o) => o.orderId === order.orderId);
-    if (found) setOrder(found);
+    if (found) {
+      setOrder(found);
+    } else {
+      setOrder({ ...order, orderStatus: newStatus });
+    }
     triggerFeedback();
   };
 

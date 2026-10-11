@@ -176,7 +176,53 @@ export default function CheckoutPage() {
       estimatedDelivery,
     };
 
-    // Store order into localStorage
+    // 1. Insert into Supabase cloud database
+    try {
+      const { createBrowserClient } = await import("@/lib/supabase/client");
+      const supabase = createBrowserClient();
+
+      const { data: insertedOrder, error: orderError } = await supabase
+        .from("orders")
+        .insert({
+          order_number: generatedId,
+          customer_name: formData.fullName,
+          customer_phone: formData.phone,
+          delivery_zone: formData.deliveryZone,
+          address: formData.address,
+          city: formData.city,
+          payment_method: formData.paymentMethod,
+          subtotal,
+          delivery_fee: shippingFee,
+          total: grandTotal,
+          status: "pending",
+          bkash_sender: formData.bkashSenderPhone || null,
+          bkash_trx_id: formData.bkashTrxId || null,
+          notes: formData.notes || null,
+        })
+        .select()
+        .single();
+
+      if (!orderError && insertedOrder) {
+        // Insert order items
+        const orderItemsPayload = items.map((item) => ({
+          order_id: insertedOrder.id,
+          product_id: item.product.id,
+          product_title: item.selectedColor
+            ? `${item.product.title} (${item.selectedColor})`
+            : item.product.title,
+          price: item.product.price,
+          quantity: item.quantity,
+          total: item.product.price * item.quantity,
+          image_url: item.product.images[0] || null,
+        }));
+
+        await supabase.from("order_items").insert(orderItemsPayload);
+      }
+    } catch (sbErr) {
+      console.warn("Supabase insertion fallback to local storage:", sbErr);
+    }
+
+    // 2. Also keep localStorage copy for immediate offline/client receipt rendering
     try {
       const existingRaw = localStorage.getItem("adorn_orders");
       const existingOrders: OrderRecord[] = existingRaw ? JSON.parse(existingRaw) : [];
