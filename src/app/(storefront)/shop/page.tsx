@@ -1,17 +1,27 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Search, SlidersHorizontal, Sparkles } from "lucide-react";
-import { PRODUCTS_DATA } from "@/lib/data/products";
+import { Product } from "@/lib/types/product";
+import { fetchSupabaseProducts } from "@/lib/data/supabaseProducts";
 import { ProductCard } from "@/components/storefront/ProductCard";
 
 type CategoryFilter = "all" | "jewelry" | "accessories" | "fashion";
 type SortOption = "featured" | "price-asc" | "price-desc";
 
 export default function ShopPage() {
+  const [products, setProducts] = useState<Product[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<CategoryFilter>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState<SortOption>("featured");
+
+  useEffect(() => {
+    async function loadCatalog() {
+      const data = await fetchSupabaseProducts();
+      setProducts(data);
+    }
+    loadCatalog();
+  }, []);
 
   const categories = [
     { label: "All Collections", value: "all" as const },
@@ -21,7 +31,7 @@ export default function ShopPage() {
   ];
 
   const filteredProducts = useMemo(() => {
-    let result = [...PRODUCTS_DATA];
+    let result = [...products];
 
     // Filter by Category
     if (selectedCategory !== "all") {

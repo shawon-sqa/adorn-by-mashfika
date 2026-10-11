@@ -73,28 +73,36 @@ export function ProductDetailClient({ product, relatedProducts }: ProductDetailC
           <div
             className={`w-full aspect-square rounded-3xl bg-gradient-to-tr ${product.gradient} border border-brand-border/80 flex flex-col items-center justify-center p-8 relative overflow-hidden shadow-sm`}
           >
+            {product.images && product.images[0] ? (
+              <img
+                src={product.images[0]}
+                alt={product.title}
+                className="absolute inset-0 w-full h-full object-cover"
+              />
+            ) : (
+              <div className="text-center space-y-2 p-6 max-w-sm">
+                <Sparkles className="w-6 h-6 text-brand-champagne mx-auto animate-pulse" />
+                <h2 className="font-serif text-2xl sm:text-3xl text-zinc-800 italic">
+                  {product.title}
+                </h2>
+                <p className="text-xs text-zinc-600 uppercase tracking-widest">
+                  Artisanal Boutique Craft
+                </p>
+              </div>
+            )}
+
             {product.badge && (
-              <span className="absolute top-5 left-5 bg-white/95 backdrop-blur-xs text-brand-charcoal text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider shadow-xs">
+              <span className="absolute top-5 left-5 bg-white/95 backdrop-blur-xs text-brand-charcoal text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider shadow-xs z-10">
                 {product.badge}
               </span>
             )}
             <button
               type="button"
-              className="absolute top-5 right-5 p-2.5 bg-white/90 rounded-full text-zinc-500 hover:text-brand-primary hover:bg-white transition-all shadow-xs"
+              className="absolute top-5 right-5 p-2.5 bg-white/90 rounded-full text-zinc-500 hover:text-brand-primary hover:bg-white transition-all shadow-xs z-10"
               aria-label="Add to Wishlist"
             >
               <Heart className="w-4 h-4" />
             </button>
-
-            <div className="text-center space-y-2 p-6 max-w-sm">
-              <Sparkles className="w-6 h-6 text-brand-champagne mx-auto animate-pulse" />
-              <h2 className="font-serif text-2xl sm:text-3xl text-zinc-800 italic">
-                {product.title}
-              </h2>
-              <p className="text-xs text-zinc-600 uppercase tracking-widest">
-                Artisanal Boutique Craft
-              </p>
-            </div>
           </div>
 
           {/* Material & Feature tags */}

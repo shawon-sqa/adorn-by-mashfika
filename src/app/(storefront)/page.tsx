@@ -1,36 +1,23 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowRight, Sparkles, ShieldCheck, Truck, Clock } from "lucide-react";
-import { formatPrice } from "@/lib/utils/formatters";
-
-// Curated preview items
-const FEATURED_HIGHLIGHTS = [
-  {
-    id: "1",
-    title: "Kundan Royal Choker Set",
-    category: "Bridal & Festive Jewelry",
-    price: 4850,
-    badge: "Bestseller",
-    gradient: "from-[#F7E7CE] to-[#F3D1DC]",
-  },
-  {
-    id: "2",
-    title: "Handcrafted Rose-Quartz Jhumkas",
-    category: "Statement Earrings",
-    price: 2450,
-    badge: "Handcrafted",
-    gradient: "from-[#FADADD] to-[#F4C2C2]",
-  },
-  {
-    id: "3",
-    title: "Embroidered Velvet Potli Clutch",
-    category: "Luxury Accessories",
-    price: 3200,
-    badge: "Limited Edition",
-    gradient: "from-[#EDE6D6] to-[#E3CBB3]",
-  },
-];
+import { Product } from "@/lib/types/product";
+import { fetchSupabaseProducts } from "@/lib/data/supabaseProducts";
+import { ProductCard } from "@/components/storefront/ProductCard";
 
 export default function HomePage() {
+  const [featured, setFeatured] = useState<Product[]>([]);
+
+  useEffect(() => {
+    async function loadFeatured() {
+      const all = await fetchSupabaseProducts();
+      setFeatured(all.slice(0, 3));
+    }
+    loadFeatured();
+  }, []);
+
   return (
     <div className="w-full">
       {/* Hero Section */}
@@ -110,7 +97,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Featured Collection Preview */}
+      {/* Featured Collection Preview from Supabase */}
       <section className="py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-12">
           <div>
@@ -131,39 +118,8 @@ export default function HomePage() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {FEATURED_HIGHLIGHTS.map((item) => (
-            <div
-              key={item.id}
-              className="group bg-white rounded-2xl overflow-hidden border border-brand-border/80 card-hover flex flex-col"
-            >
-              <div className={`h-64 sm:h-72 w-full bg-gradient-to-tr ${item.gradient} relative flex items-center justify-center p-6`}>
-                <span className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm text-brand-charcoal text-[11px] font-semibold px-2.5 py-1 rounded-full uppercase tracking-wider">
-                  {item.badge}
-                </span>
-                <span className="font-serif text-zinc-600/60 italic text-lg select-none text-center">
-                  [ {item.title} ]
-                </span>
-              </div>
-              <div className="p-6 flex flex-col flex-1">
-                <span className="text-[11px] uppercase tracking-wider text-brand-muted font-medium mb-1">
-                  {item.category}
-                </span>
-                <h3 className="font-serif text-lg text-brand-charcoal group-hover:text-brand-primary transition-colors mb-3">
-                  {item.title}
-                </h3>
-                <div className="mt-auto flex items-center justify-between pt-4 border-t border-brand-border/40">
-                  <span className="font-semibold text-brand-charcoal text-base">
-                    {formatPrice(item.price)}
-                  </span>
-                  <Link
-                    href={`/shop`}
-                    className="text-xs font-medium text-brand-primary bg-brand-blush hover:bg-brand-primary hover:text-white px-3.5 py-1.5 rounded-full transition-colors"
-                  >
-                    View Details
-                  </Link>
-                </div>
-              </div>
-            </div>
+          {featured.map((item) => (
+            <ProductCard key={item.id} product={item} />
           ))}
         </div>
       </section>

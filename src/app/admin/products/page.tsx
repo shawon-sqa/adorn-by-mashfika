@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Plus, Search, Eye, AlertTriangle } from "lucide-react";
 import { Product } from "@/lib/types/product";
 import { getAdminProducts } from "@/lib/data/adminProducts";
+import { fetchSupabaseProducts } from "@/lib/data/supabaseProducts";
 import { formatPrice } from "@/lib/utils/formatters";
 
 export default function AdminProductsListPage() {
@@ -13,7 +14,11 @@ export default function AdminProductsListPage() {
   const [selectedCategory, setSelectedCategory] = useState("all");
 
   useEffect(() => {
-    setProducts(getAdminProducts());
+    async function loadProducts() {
+      const sbProducts = await fetchSupabaseProducts();
+      setProducts(sbProducts);
+    }
+    loadProducts();
   }, []);
 
   const filteredProducts = products.filter((p) => {
@@ -103,11 +108,19 @@ export default function AdminProductsListPage() {
                   <tr key={p.id} className="hover:bg-zinc-50/80 transition-colors">
                     <td className="py-4 px-6 flex items-center gap-3">
                       <div
-                        className={`w-12 h-12 rounded-xl bg-gradient-to-tr ${p.gradient} border border-brand-border/60 flex-shrink-0 flex items-center justify-center p-1 text-center`}
+                        className={`w-12 h-12 rounded-xl bg-gradient-to-tr ${p.gradient} border border-brand-border/60 flex-shrink-0 flex items-center justify-center p-1 text-center overflow-hidden relative`}
                       >
-                        <span className="font-serif text-[8px] text-zinc-700 italic line-clamp-1">
-                          {p.title}
-                        </span>
+                        {p.images && p.images[0] ? (
+                          <img
+                            src={p.images[0]}
+                            alt={p.title}
+                            className="w-full h-full object-cover rounded-lg"
+                          />
+                        ) : (
+                          <span className="font-serif text-[8px] text-zinc-700 italic line-clamp-1">
+                            {p.title}
+                          </span>
+                        )}
                       </div>
                       <div>
                         <p className="font-medium text-brand-charcoal">{p.title}</p>

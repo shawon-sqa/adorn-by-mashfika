@@ -26,22 +26,31 @@ export function ProductCard({ product }: ProductCardProps) {
         href={`/shop/${product.slug}`}
         className={`relative h-64 sm:h-72 w-full bg-gradient-to-tr ${product.gradient} flex items-center justify-center p-6 overflow-hidden cursor-pointer`}
       >
+        {/* Real uploaded product image if present */}
+        {product.images && product.images[0] ? (
+          <img
+            src={product.images[0]}
+            alt={product.title}
+            className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+          />
+        ) : (
+          /* Mock Product Title Display */
+          <div className="text-center p-4">
+            <span className="font-serif text-zinc-700/70 italic text-lg sm:text-xl block group-hover:scale-105 transition-transform duration-300">
+              {product.title}
+            </span>
+            <span className="text-[11px] text-zinc-500 uppercase tracking-widest block mt-1">
+              {product.materials[0] || "Artisanal Selection"}
+            </span>
+          </div>
+        )}
+
         {/* Badge */}
         {product.badge && (
           <span className="absolute top-3 left-3 bg-white/95 backdrop-blur-xs text-brand-charcoal text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider shadow-xs z-10">
             {product.badge}
           </span>
         )}
-
-        {/* Mock Product Title Display */}
-        <div className="text-center p-4">
-          <span className="font-serif text-zinc-700/70 italic text-lg sm:text-xl block group-hover:scale-105 transition-transform duration-300">
-            {product.title}
-          </span>
-          <span className="text-[11px] text-zinc-500 uppercase tracking-widest block mt-1">
-            {product.materials[0]}
-          </span>
-        </div>
 
         {/* Quick Action Floating Overlay */}
         <div className="absolute inset-x-0 bottom-3 px-4 flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">

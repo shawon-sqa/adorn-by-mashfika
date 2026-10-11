@@ -28,3 +28,18 @@ export interface SupabaseOrderItem {
   total: number;
   image_url?: string | null;
 }
+
+export interface SupabaseProduct {
+  id: string;
+  title: string;
+  slug: string;
+  category: "jewelry" | "accessories" | "fashion";
+  price: number;
+  regular_price?: number | null;
+  stock: number;
+  description?: string | null;
+  images: string[];
+  is_featured: boolean;
+  created_at: string;
+}
+
