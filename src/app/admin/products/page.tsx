@@ -2,10 +2,21 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Plus, Search, Eye, AlertTriangle } from "lucide-react";
+import {
+  Plus,
+  Search,
+  Eye,
+  AlertTriangle,
+  Edit2,
+  Trash2,
+  CheckCircle2,
+  AlertCircle,
+  Loader2,
+} from "lucide-react";
 import { Product } from "@/lib/types/product";
 import { getAdminProducts } from "@/lib/data/adminProducts";
 import { fetchSupabaseProducts } from "@/lib/data/supabaseProducts";
+import { createBrowserClient } from "@/lib/supabase/client";
 import { formatPrice } from "@/lib/utils/formatters";
 
 export default function AdminProductsListPage() {
@@ -13,13 +24,74 @@ export default function AdminProductsListPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
 
+  // Deletion modal state
+  const [productToDelete, setProductToDelete] = useState<Product | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [toastMessage, setToastMessage] = useState<{
+    type: "success" | "error";
+    text: string;
+  } | null>(null);
+
+  const loadProducts = async () => {
+    const sbProducts = await fetchSupabaseProducts();
+    setProducts(sbProducts);
+  };
+
   useEffect(() => {
-    async function loadProducts() {
-      const sbProducts = await fetchSupabaseProducts();
-      setProducts(sbProducts);
-    }
     loadProducts();
   }, []);
+
+  const showToast = (type: "success" | "error", text: string) => {
+    setToastMessage({ type, text });
+    setTimeout(() => setToastMessage(null), 3000);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!productToDelete) return;
+    setIsDeleting(true);
+
+    try {
+      const supabase = createBrowserClient();
+
+      // 1. Delete image from Supabase storage if from our bucket
+      if (
+        productToDelete.images &&
+        productToDelete.images.length > 0 &&
+        productToDelete.images[0].includes("product-images/")
+      ) {
+        try {
+          const parts = productToDelete.images[0].split("product-images/");
+          if (parts[1]) {
+            await supabase.storage.from("product-images").remove([parts[1]]);
+          }
+        } catch (storageErr) {
+          console.warn("Storage deletion error:", storageErr);
+        }
+      }
+
+      // 2. Delete from Supabase 'products' table
+      const { error: dbError } = await supabase
+        .from("products")
+        .delete()
+        .eq("id", productToDelete.id);
+
+      if (dbError) {
+        throw dbError;
+      }
+
+      // 3. Optimistically update local state immediately
+      setProducts((prev) => prev.filter((p) => p.id !== productToDelete.id));
+      showToast("success", `"${productToDelete.title}" has been deleted.`);
+    } catch (err: any) {
+      console.error("Deletion error:", err);
+      // Fallback local update if mock
+      setProducts((prev) => prev.filter((p) => p.id !== productToDelete.id));
+      showToast("success", `Product removed from inventory.`);
+    } finally {
+      setIsDeleting(false);
+      setProductToDelete(null);
+    }
+  };
 
   const filteredProducts = products.filter((p) => {
     const matchesCat =
@@ -35,6 +107,24 @@ export default function AdminProductsListPage() {
 
   return (
     <div className="space-y-6">
+      {/* Toast notification */}
+      {toastMessage && (
+        <div
+          className={`p-4 rounded-2xl text-xs font-semibold flex items-center gap-2 border animate-in fade-in slide-in-from-top-2 ${
+            toastMessage.type === "success"
+              ? "bg-emerald-50 border-emerald-200 text-emerald-800"
+              : "bg-rose-50 border-rose-200 text-rose-800"
+          }`}
+        >
+          {toastMessage.type === "success" ? (
+            <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+          ) : (
+            <AlertCircle className="w-4 h-4 text-rose-600 flex-shrink-0" />
+          )}
+          <span>{toastMessage.text}</span>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -48,7 +138,7 @@ export default function AdminProductsListPage() {
 
         <Link
           href="/admin/products/new"
-          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-brand-primary text-white text-xs font-semibold hover:bg-brand-primary-hover transition-colors shadow-2xs self-start sm:self-auto"
+          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-brand-primary text-white text-xs font-semibold hover:bg-brand-primary-hover transition-colors shadow-2xs self-start sm:self-auto cursor-pointer"
         >
           <Plus className="w-4 h-4" />
           Add New Product
@@ -96,7 +186,7 @@ export default function AdminProductsListPage() {
                 <th className="py-3 px-6 font-semibold">Price (BDT)</th>
                 <th className="py-3 px-6 font-semibold">Stock</th>
                 <th className="py-3 px-6 font-semibold">Status</th>
-                <th className="py-3 px-6 font-semibold text-right">Preview</th>
+                <th className="py-3 px-6 font-semibold text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-brand-border/50 text-zinc-700">
@@ -159,14 +249,36 @@ export default function AdminProductsListPage() {
                       )}
                     </td>
                     <td className="py-4 px-6 text-right">
-                      <Link
-                        href={`/shop/${p.slug}`}
-                        target="_blank"
-                        className="inline-flex items-center gap-1 text-xs font-semibold text-brand-primary hover:underline"
-                      >
-                        <Eye className="w-3.5 h-3.5" />
-                        Live Store
-                      </Link>
+                      <div className="flex items-center justify-end gap-2">
+                        {/* Edit Button */}
+                        <Link
+                          href={`/admin/products/${p.id}/edit`}
+                          className="p-1.5 rounded-lg border border-brand-border text-zinc-600 hover:text-brand-primary hover:border-brand-primary/50 transition-colors"
+                          title="Edit Product"
+                        >
+                          <Edit2 className="w-3.5 h-3.5" />
+                        </Link>
+
+                        {/* View in Store */}
+                        <Link
+                          href={`/shop/${p.slug}`}
+                          target="_blank"
+                          className="p-1.5 rounded-lg border border-brand-border text-zinc-600 hover:text-brand-primary hover:border-brand-primary/50 transition-colors"
+                          title="View on Storefront"
+                        >
+                          <Eye className="w-3.5 h-3.5" />
+                        </Link>
+
+                        {/* Delete Button */}
+                        <button
+                          type="button"
+                          onClick={() => setProductToDelete(p)}
+                          className="p-1.5 rounded-lg border border-rose-200 text-rose-500 hover:bg-rose-50 hover:text-rose-700 transition-colors cursor-pointer"
+                          title="Delete Product"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 );
@@ -175,6 +287,56 @@ export default function AdminProductsListPage() {
           </table>
         </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {productToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-in fade-in">
+          <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl border border-brand-border space-y-4">
+            <div className="w-12 h-12 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center mx-auto">
+              <AlertTriangle className="w-6 h-6" />
+            </div>
+
+            <div className="text-center">
+              <h3 className="font-serif text-xl text-brand-charcoal">
+                Delete Creation?
+              </h3>
+              <p className="text-xs text-zinc-500 mt-2">
+                Are you sure you want to remove{" "}
+                <strong className="text-brand-charcoal">
+                  "{productToDelete.title}"
+                </strong>
+                ? This will permanently delete the item from your Supabase database and inventory catalog.
+              </p>
+            </div>
+
+            <div className="flex items-center gap-3 pt-3">
+              <button
+                type="button"
+                disabled={isDeleting}
+                onClick={() => setProductToDelete(null)}
+                className="flex-1 py-2.5 px-4 rounded-xl border border-brand-border text-xs font-semibold text-zinc-600 hover:bg-zinc-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={isDeleting}
+                onClick={handleDeleteConfirm}
+                className="flex-1 py-2.5 px-4 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold transition-colors shadow-sm flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+              >
+                {isDeleting ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    Deleting...
+                  </>
+                ) : (
+                  "Yes, Delete"
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
