@@ -1,26 +1,51 @@
 @import "tailwindcss";
 
+@theme {
+  --color-brand-primary: #B76E79;
+  --color-brand-primary-hover: #9E5B65;
+  --color-brand-primary-light: #F7E9EB;
+  --color-brand-blush: #FFF0F3;
+  --color-brand-blush-subtle: #FFF7F8;
+  --color-brand-champagne: #D4AF37;
+  --color-brand-champagne-light: #FBF4DE;
+  --color-brand-ivory: #FAF8F5;
+  --color-brand-charcoal: #1A1A1A;
+  --color-brand-muted: #666666;
+  --color-brand-border: #EFE8E5;
+
+  --font-serif: var(--font-playfair), Georgia, serif;
+  --font-sans: var(--font-inter), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --background: #FAF8F5;
+  --foreground: #1A1A1A;
 }
 
 body {
-  background: var(--background);
+  background-color: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Elegant selection & scrollbar */
+::selection {
+  background-color: #B76E79;
+  color: #FFFFFF;
+}
+
+/* Custom smooth transitions for boutique feel */
+.luxury-shadow {
+  box-shadow: 0 10px 30px -10px rgba(183, 110, 121, 0.15);
+}
+
+.card-hover {
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.card-hover:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 14px 35px -10px rgba(183, 110, 121, 0.2);
 }
