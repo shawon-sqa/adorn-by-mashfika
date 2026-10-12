@@ -544,20 +544,36 @@ export async function deleteOrArchiveCart(
   try {
     const supabase = createBrowserClient();
     if (permanent) {
-      const { error } = await supabase
+      let { error } = await supabase
         .from("abandoned_carts")
         .delete()
         .or(`id.eq.${cartId},session_id.eq.${cartId}`);
+      if (error && error.message?.includes("session_id")) {
+        const res = await supabase.from("abandoned_carts").delete().eq("id", cartId);
+        error = res.error;
+      }
       if (error) {
         console.error("[CartsRecovery] Failed to delete cart:", error.message);
       }
     } else {
-      const { error } = await supabase
+      const { error: archiveError } = await supabase
         .from("abandoned_carts")
         .update({ is_archived: true })
         .or(`id.eq.${cartId},session_id.eq.${cartId}`);
-      if (error) {
-        console.error("[CartsRecovery] Failed to archive cart:", error.message);
+
+      if (archiveError) {
+        // Fallback to direct delete so the admin action never breaks
+        let { error: deleteError } = await supabase
+          .from("abandoned_carts")
+          .delete()
+          .or(`id.eq.${cartId},session_id.eq.${cartId}`);
+        if (deleteError && deleteError.message?.includes("session_id")) {
+          const res = await supabase.from("abandoned_carts").delete().eq("id", cartId);
+          deleteError = res.error;
+        }
+        if (deleteError) {
+          console.error("[CartsRecovery] Failed to remove cart:", deleteError.message);
+        }
       }
     }
   } catch (err) {

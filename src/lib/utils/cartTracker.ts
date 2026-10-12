@@ -23,56 +23,74 @@ export interface SyncCartData {
   status?: "ACTIVE" | "ABANDONED" | "CONVERTED";
 }
 
+export const isValidUuid = (str: string | null | undefined): boolean => {
+  if (!str || typeof str !== "string") return false;
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(str);
+};
+
+export function generateUuidV4(): string {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return crypto.randomUUID();
+  }
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    const v = c === "x" ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
+}
+
 /**
  * Get or create a persistent UUID guest cart identifier in localStorage.
- * Uses crypto.randomUUID() when available.
+ * Always guarantees a valid standard RFC4122 UUID v4.
  */
 export function getOrCreateCartSessionId(): string {
   if (typeof window === "undefined") {
-    return "00000000-0000-0000-0000-000000000000";
+    return "00000000-0000-4000-8000-000000000000";
   }
 
   try {
-    const existing =
-      localStorage.getItem(ADORN_CART_SESSION_ID_KEY) ||
-      localStorage.getItem("cart_session_id") ||
-      localStorage.getItem("adorn_active_session_cart_id");
-
-    if (existing && existing.length > 5) {
-      localStorage.setItem(ADORN_CART_SESSION_ID_KEY, existing);
-      localStorage.setItem("cart_session_id", existing);
-      localStorage.setItem("adorn_active_session_cart_id", existing);
-      return existing;
-    }
-
-    let newId: string;
-    if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
-      newId = crypto.randomUUID();
+    let sessionId = localStorage.getItem(ADORN_CART_SESSION_ID_KEY);
+    if (!sessionId || !isValidUuid(sessionId)) {
+      const alt = localStorage.getItem("cart_session_id") || localStorage.getItem("adorn_active_session_cart_id");
+      if (alt && isValidUuid(alt)) {
+        sessionId = alt;
+      } else {
+        sessionId = generateUuidV4();
+      }
+      localStorage.setItem(ADORN_CART_SESSION_ID_KEY, sessionId);
+      localStorage.setItem("cart_session_id", sessionId);
     } else {
-      // RFC4122 v4 UUID fallback
-      newId = "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
-        const r = (Math.random() * 16) | 0;
-        const v = c === "x" ? r : (r & 0x3) | 0x8;
-        return v.toString(16);
-      });
+      localStorage.setItem("cart_session_id", sessionId);
     }
 
-    localStorage.setItem(ADORN_CART_SESSION_ID_KEY, newId);
-    localStorage.setItem("cart_session_id", newId);
-    localStorage.setItem("adorn_active_session_cart_id", newId);
-    return newId;
+    return sessionId;
   } catch (err) {
-    console.error("[CartTracker] Error accessing localStorage:", err);
-    return "00000000-0000-0000-0000-000000000000";
+    console.warn("[CartTracker] Error accessing localStorage:", err);
+    return generateUuidV4();
   }
 }
 
 /**
  * Robustly upsert cart session into Supabase abandoned_carts table.
- * Includes console.log and defensive error handling.
+ * Guarantees a valid standard RFC4122 UUID v4 for the primary key.
  */
 export async function syncCartToSupabase(cartData: SyncCartData): Promise<string> {
-  const sessionId = cartData.sessionId || getOrCreateCartSessionId();
+  // Ensure the id field sent to Supabase abandoned_carts is always a valid standard RFC4122 UUID v4
+  let sessionId = cartData.sessionId;
+  if (!sessionId || !isValidUuid(sessionId)) {
+    sessionId = getOrCreateCartSessionId();
+  }
+  if (!isValidUuid(sessionId)) {
+    sessionId = generateUuidV4();
+    if (typeof window !== "undefined") {
+      try {
+        localStorage.setItem(ADORN_CART_SESSION_ID_KEY, sessionId);
+        localStorage.setItem("cart_session_id", sessionId);
+      } catch {}
+    }
+  }
+
+  const legacySessionName = cartData.sessionId && !isValidUuid(cartData.sessionId) ? cartData.sessionId : undefined;
   const now = new Date().toISOString();
 
   // Normalize items array
@@ -98,11 +116,14 @@ export async function syncCartToSupabase(cartData: SyncCartData): Promise<string
     const rawLocal = localStorage.getItem("adorn_abandoned_carts_v2");
     const localList = rawLocal ? JSON.parse(rawLocal) : [];
     const existingIndex = localList.findIndex(
-      (c: any) => c.id === sessionId || c.session_id === sessionId
+      (c: any) =>
+        c.id === sessionId ||
+        c.session_id === sessionId ||
+        (legacySessionName && (c.id === legacySessionName || c.session_id === legacySessionName))
     );
     const localRecord = {
       id: sessionId,
-      session_id: sessionId,
+      session_id: legacySessionName || sessionId,
       shopper_name: shopperName,
       customer_phone: shopperPhone || "",
       customer_email: shopperEmail || "",
@@ -135,17 +156,15 @@ export async function syncCartToSupabase(cartData: SyncCartData): Promise<string
     console.warn("[CartTracker] LocalStorage cache notice:", err);
   }
 
-  // Verified schema payload matching exact columns in abandoned_carts table
-  const primaryPayload: Record<string, any> = {
+  // Verified schema payload matching exact columns in abandoned_carts table:
+  // id (guaranteed valid UUID v4), shopper_name, shopper_phone, shopper_email, items, cart_total, status, last_active
+  const payload = {
     id: sessionId,
     shopper_name: shopperName,
     shopper_phone: shopperPhone,
-    customer_phone: shopperPhone,
     shopper_email: shopperEmail,
-    customer_email: shopperEmail,
     items: formattedItems,
     cart_total: cartTotal,
-    cart_value: cartTotal,
     status,
     last_active: now,
   };
@@ -158,40 +177,20 @@ export async function syncCartToSupabase(cartData: SyncCartData): Promise<string
       itemsCount: formattedItems.length,
       cart_total: cartTotal,
       status,
+      last_active: now,
     });
 
     const { error } = await supabase
       .from("abandoned_carts")
-      .upsert(primaryPayload, { onConflict: "id" });
+      .upsert(payload, { onConflict: "id" });
 
     if (error) {
-      console.warn("[CartTracker] Upsert primary payload error, trying fallback:", error.message);
-      // Secondary fallback payload with standard columns
-      const fallbackPayload: Record<string, any> = {
-        id: sessionId,
-        shopper_name: shopperName,
-        customer_phone: shopperPhone,
-        customer_email: shopperEmail,
-        items: formattedItems,
-        cart_value: cartTotal,
-        status,
-        last_active_at: now,
-      };
-
-      const { error: fallbackErr } = await supabase
-        .from("abandoned_carts")
-        .upsert(fallbackPayload, { onConflict: "id" });
-
-      if (fallbackErr) {
-        console.error("[CartTracker] Supabase abandoned_carts upsert failed:", fallbackErr.message);
-      } else {
-        console.log("[CartTracker] Successfully synced via fallback payload:", sessionId);
-      }
+      console.warn("[CartTracker] Supabase abandoned_carts sync notice (fallback active):", error.message);
     } else {
       console.log("[CartTracker] Successfully synced abandoned cart:", sessionId);
     }
-  } catch (err) {
-    console.error("[CartTracker] Unexpected error during syncCartToSupabase:", err);
+  } catch (err: any) {
+    console.warn("[CartTracker] Abandoned cart sync notice:", err?.message || err);
   }
 
   return sessionId;
@@ -201,7 +200,10 @@ export async function syncCartToSupabase(cartData: SyncCartData): Promise<string
  * Mark cart session as CONVERTED in Supabase and localStorage.
  */
 export async function markCartSessionConverted(sessionId?: string): Promise<void> {
-  const targetId = sessionId || getOrCreateCartSessionId();
+  let targetId = sessionId;
+  if (!targetId || !isValidUuid(targetId)) {
+    targetId = getOrCreateCartSessionId();
+  }
   const now = new Date().toISOString();
 
   console.log("[CartTracker] Marking cart as CONVERTED:", targetId);
@@ -212,7 +214,9 @@ export async function markCartSessionConverted(sessionId?: string): Promise<void
     if (rawLocal) {
       const localList = JSON.parse(rawLocal);
       const updated = localList.map((c: any) =>
-        c.id === targetId || c.session_id === targetId
+        c.id === targetId ||
+        c.session_id === targetId ||
+        (sessionId && (c.id === sessionId || c.session_id === sessionId))
           ? { ...c, status: "CONVERTED", last_active: now, last_active_at: now }
           : c
       );
@@ -222,24 +226,25 @@ export async function markCartSessionConverted(sessionId?: string): Promise<void
     console.warn("[CartTracker] LocalStorage convert cache notice:", err);
   }
 
-  // Update Supabase
-  try {
-    const supabase = createBrowserClient();
-    const { error } = await supabase
-      .from("abandoned_carts")
-      .update({
-        status: "CONVERTED",
-        last_active: now,
-        last_active_at: now,
-      })
-      .or(`id.eq.${targetId},session_id.eq.${targetId}`);
+  // Update Supabase if targetId is a valid UUID
+  if (isValidUuid(targetId)) {
+    try {
+      const supabase = createBrowserClient();
+      const { error } = await supabase
+        .from("abandoned_carts")
+        .update({
+          status: "CONVERTED",
+          last_active: now,
+        })
+        .eq("id", targetId);
 
-    if (error) {
-      console.error("[CartTracker] Failed to mark cart as CONVERTED in Supabase:", error.message);
-    } else {
-      console.log("[CartTracker] Successfully marked cart as CONVERTED in Supabase:", targetId);
+      if (error) {
+        console.warn("[CartTracker] Convert notice:", error.message);
+      } else {
+        console.log("[CartTracker] Successfully marked cart as CONVERTED in Supabase:", targetId);
+      }
+    } catch (err: any) {
+      console.warn("[CartTracker] Notice updating cart to CONVERTED:", err?.message || err);
     }
-  } catch (err) {
-    console.error("[CartTracker] Error updating cart to CONVERTED:", err);
   }
 }

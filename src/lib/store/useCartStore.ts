@@ -7,6 +7,7 @@ import { SupabaseCoupon } from "@/lib/types/supabase";
 import {
   getOrCreateCartSessionId,
   syncCartToSupabase,
+  isValidUuid,
 } from "@/lib/utils/cartTracker";
 
 export interface AppliedCouponState {
@@ -274,7 +275,12 @@ export const useCartStore = create<CartStore>()(
         appliedCoupon: state.appliedCoupon,
       }),
       onRehydrateStorage: () => (state) => {
-        if (state && typeof window !== "undefined" && state.items.length > 0) {
+        if (state && typeof window !== "undefined") {
+          // If hydrated sessionId is invalid (e.g. legacy 'sess-...'), sanitize to a valid UUID
+          if (!state.sessionId || !isValidUuid(state.sessionId)) {
+            state.sessionId = getOrCreateCartSessionId();
+          }
+          if (state.items.length > 0) {
           try {
             syncCartToSupabase({
               sessionId: state.sessionId,
@@ -296,8 +302,9 @@ export const useCartStore = create<CartStore>()(
             }).catch((err) => {
               console.error("[CartStore] Rehydration sync failed:", err);
             });
-          } catch (err) {
-            console.error("[CartStore] Rehydration exception:", err);
+            } catch (err) {
+              console.error("[CartStore] Rehydration exception:", err);
+            }
           }
         }
       },

@@ -99,8 +99,8 @@ export default function AdminCartsPage() {
   // Filtered and searched carts
   const filteredCarts = useMemo(() => {
     return carts.filter((c) => {
-      // Archived filter
-      if (!showArchived && c.is_archived) return false;
+      // Archived filter - filter out archived carts from active views
+      if (!showArchived && Boolean(c.is_archived)) return false;
       if (showArchived && !c.is_archived) return false;
 
       // Status filter
