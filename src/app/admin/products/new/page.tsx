@@ -238,7 +238,7 @@ export default function AdminNewProductPage() {
             Add New Product
           </h1>
           <p className="text-xs text-zinc-500 mt-0.5">
-            Upload images, customize color variants, and publish creations to your Supabase catalog.
+            Upload images, customize color variants, and publish creations to your boutique catalog.
           </p>
         </div>
       </div>
@@ -262,7 +262,7 @@ export default function AdminNewProductPage() {
         onSubmit={handleSubmit}
         className="bg-white rounded-3xl p-6 sm:p-8 border border-brand-border/80 shadow-2xs space-y-6"
       >
-        {/* Section: Multiple Image Upload with Supabase Storage */}
+        {/* Section: Multiple Image Upload with Boutique Storage */}
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <div>
@@ -270,7 +270,7 @@ export default function AdminNewProductPage() {
                 Product Imagery ({images.length} uploaded)
               </label>
               <p className="text-xs text-zinc-400 mt-0.5">
-                Upload multiple photos simultaneously to Supabase bucket <code className="text-brand-primary">product-images</code>. Reorder or remove photos below.
+                Upload multiple high-resolution photos for the boutique catalog. Reorder or remove photos below.
               </p>
             </div>
             {images.length > 0 && (
@@ -373,7 +373,7 @@ export default function AdminNewProductPage() {
           {uploadingImages && (
             <div className="p-3 bg-brand-blush/60 border border-brand-primary/20 rounded-xl flex items-center gap-2 text-xs text-brand-primary font-medium animate-pulse">
               <div className="w-4 h-4 border-2 border-brand-primary border-t-transparent rounded-full animate-spin flex-shrink-0" />
-              <span>{uploadStatusText || "Uploading images to Supabase storage..."}</span>
+              <span>{uploadStatusText || "Uploading images to boutique catalog..."}</span>
             </div>
           )}
         </div>
@@ -597,7 +597,7 @@ export default function AdminNewProductPage() {
             {isSubmitting ? (
               <>
                 <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                Publishing to Supabase...
+                Publishing Creation...
               </>
             ) : (
               "Publish Creation"

@@ -1,0 +1,367 @@
+"use client";
+
+import { useState } from "react";
+import Link from "next/link";
+import {
+  ChevronDown,
+  ShoppingBag,
+  Truck,
+  CreditCard,
+  RotateCcw,
+  Search,
+  MessageCircle,
+  HelpCircle,
+  Phone,
+  ArrowRight,
+  ShieldCheck,
+  Sparkles,
+} from "lucide-react";
+import { useStoreSettings } from "@/lib/data/storeSettings";
+import { formatPrice } from "@/lib/utils/formatters";
+
+interface FAQItem {
+  id: string;
+  category: "Ordering" | "Delivery" | "Payment" | "Returns" | "Tracking";
+  question: string;
+  answer: (settings: {
+    insideFee: number;
+    outsideFee: number;
+    freeThreshold: number;
+    phone: string;
+    waNumber: string;
+    bkashNumber: string;
+  }) => React.ReactNode;
+}
+
+const FAQS: FAQItem[] = [
+  {
+    id: "place-order",
+    category: "Ordering",
+    question: "How do I place an order?",
+    answer: () => (
+      <div className="space-y-3 text-zinc-600 leading-relaxed text-xs sm:text-sm">
+        <p>Placing an order at Adorn by Mashfika is quick, effortless, and secure:</p>
+        <ol className="list-decimal pl-5 space-y-2">
+          <li>
+            <strong>Select Your Creations:</strong> Browse our curated jewelry, bridal pieces, or accessories and click <em>Add to Bag</em>.
+          </li>
+          <li>
+            <strong>Review Your Bag:</strong> Open your shopping bag at any time to modify quantities or enter promo codes.
+          </li>
+          <li>
+            <strong>Proceed to Checkout:</strong> Provide your delivery address and contact number. No mandatory account registration required.
+          </li>
+          <li>
+            <strong>Select Payment & Confirm:</strong> Choose between convenient <em>Cash on Delivery (COD)</em> or instant <em>bKash / Nagad</em> transfer, then click <em>Complete Order</em>.
+          </li>
+        </ol>
+        <p className="text-zinc-500 italic pt-1">
+          You will instantly receive an SMS/WhatsApp confirmation with your unique order tracking reference (e.g. <code>#ADM-123456</code>).
+        </p>
+      </div>
+    ),
+  },
+  {
+    id: "delivery-charges",
+    category: "Delivery",
+    question: "What are the delivery times and charges?",
+    answer: ({ insideFee, outsideFee, freeThreshold }) => (
+      <div className="space-y-3 text-zinc-600 leading-relaxed text-xs sm:text-sm">
+        <p>We partner with premier express courier services to ensure prompt and pristine door-to-door delivery across all 64 districts of Bangladesh:</p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+          <div className="p-3.5 rounded-2xl bg-brand-blush/40 border border-brand-primary/20">
+            <span className="text-xs font-bold uppercase tracking-wider text-brand-primary block mb-1">
+              Inside Dhaka Metro
+            </span>
+            <p className="font-medium text-brand-charcoal text-sm">
+              24 to 48 Hours Delivery
+            </p>
+            <p className="text-xs text-zinc-600 mt-1">
+              Standard fee: <strong>{formatPrice(insideFee)}</strong>
+            </p>
+            <p className="text-[11px] text-emerald-700 font-semibold mt-1">
+              ✨ FREE Shipping on orders above {formatPrice(freeThreshold)}!
+            </p>
+          </div>
+
+          <div className="p-3.5 rounded-2xl bg-brand-ivory border border-brand-border/80">
+            <span className="text-xs font-bold uppercase tracking-wider text-brand-charcoal block mb-1">
+              Outside Dhaka (All BD)
+            </span>
+            <p className="font-medium text-brand-charcoal text-sm">
+              3 to 5 Business Days
+            </p>
+            <p className="text-xs text-zinc-600 mt-1">
+              Standard flat fee: <strong>{formatPrice(outsideFee)}</strong>
+            </p>
+            <p className="text-[11px] text-zinc-500 mt-1">
+              Delivered safely via Steadfast / Pathao Express.
+            </p>
+          </div>
+        </div>
+      </div>
+    ),
+  },
+  {
+    id: "bkash-payment",
+    category: "Payment",
+    question: "How can I pay with bKash / Nagad?",
+    answer: ({ bkashNumber }) => (
+      <div className="space-y-3 text-zinc-600 leading-relaxed text-xs sm:text-sm">
+        <p>You can pay securely in advance using bKash or Nagad to avoid keeping loose cash at delivery:</p>
+        <ol className="list-decimal pl-5 space-y-2">
+          <li>
+            Go to your bKash or Nagad App and select <strong>Send Money</strong> (or Make Payment).
+          </li>
+          <li>
+            Send the exact grand total shown at checkout to our official boutique number:
+            <span className="block mt-1 font-mono font-bold text-brand-primary text-xs sm:text-sm bg-brand-blush/60 px-3 py-1.5 rounded-lg w-fit border border-brand-primary/20">
+              {bkashNumber}
+            </span>
+          </li>
+          <li>
+            Copy the <strong>Transaction ID (TrxID)</strong> generated by bKash/Nagad upon completion.
+          </li>
+          <li>
+            Enter your sending phone number and TrxID in the Checkout form before submitting your order.
+          </li>
+        </ol>
+        <p className="text-zinc-500 text-xs pt-1">
+          Our concierge team promptly verifies the transaction and prepares your parcel for expedited dispatch.
+        </p>
+      </div>
+    ),
+  },
+  {
+    id: "return-policy",
+    category: "Returns",
+    question: "What is your return & exchange policy?",
+    answer: ({ waNumber }) => (
+      <div className="space-y-3 text-zinc-600 leading-relaxed text-xs sm:text-sm">
+        <p className="font-medium text-brand-charcoal">
+          Customer satisfaction and boutique trust are our utmost priorities.
+        </p>
+        <p>
+          We encourage you to <strong>inspect your jewelry and items in front of the courier delivery representative</strong>:
+        </p>
+        <ul className="list-disc pl-5 space-y-1.5">
+          <li>
+            If any item arrives damaged, defective, or incorrect, you may refuse the parcel immediately on the spot without delivery cost penalty.
+          </li>
+          <li>
+            In case you notice any issue right after opening your parcel, contact our concierge on WhatsApp within <strong>24 hours</strong> with clear photos or an unboxing video.
+          </li>
+          <li>
+            We will gladly arrange a swift exchange or store credit for verified discrepancies.
+          </li>
+        </ul>
+        <div className="pt-2">
+          <a
+            href={`https://wa.me/${waNumber}?text=Hello%20Adorn%20by%20Mashfika,%20I%20have%20an%20inquiry%20regarding%20a%20return%20or%20exchange.`}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700 hover:text-emerald-800 underline"
+          >
+            <MessageCircle className="w-3.5 h-3.5" />
+            Contact Returns Concierge on WhatsApp
+          </a>
+        </div>
+      </div>
+    ),
+  },
+  {
+    id: "parcel-tracking",
+    category: "Tracking",
+    question: "How can I track my parcel?",
+    answer: ({ phone, waNumber }) => (
+      <div className="space-y-3 text-zinc-600 leading-relaxed text-xs sm:text-sm">
+        <p>Tracking your boutique order is transparent every step of the journey:</p>
+        <ul className="list-disc pl-5 space-y-2">
+          <li>
+            <strong>Online Tracking Portal:</strong> Visit our{" "}
+            <Link href="/track-order" className="text-brand-primary font-semibold underline">
+              Track Your Order
+            </Link>{" "}
+            page and enter your 6-digit Order Reference (e.g. <code>#ADM-123456</code>) or phone number to see real-time fulfillment status.
+          </li>
+          <li>
+            <strong>Courier Consignment ID:</strong> Once handed over to Steadfast or Pathao Express, you will receive a tracking link via SMS.
+          </li>
+          <li>
+            <strong>Concierge Support:</strong> For instant updates or delivery instructions, text our dedicated WhatsApp hotline at{" "}
+            <a
+              href={`https://wa.me/${waNumber}`}
+              target="_blank"
+              rel="noreferrer"
+              className="text-brand-primary font-semibold underline"
+            >
+              {phone}
+            </a>
+            .
+          </li>
+        </ul>
+      </div>
+    ),
+  },
+];
+
+export default function FAQPage() {
+  const [openItem, setOpenItem] = useState<string | null>("place-order");
+  const [searchQuery, setSearchQuery] = useState("");
+  const storeSettings = useStoreSettings();
+
+  const insideFee = Number(storeSettings.insideDhakaDeliveryFee) || 70;
+  const outsideFee = Number(storeSettings.outsideDhakaDeliveryFee) || 130;
+  const freeThreshold = Number(storeSettings.freeDeliveryThreshold) || 2000;
+  const phone = storeSettings.contactPhone || "01353655433";
+  const rawPhone = phone.replace(/\D/g, "") || "01353655433";
+  const waNumber = rawPhone.startsWith("88") ? rawPhone : `88${rawPhone}`;
+  const bkashNumber = storeSettings.bkashNumber || "01353655433";
+
+  const toggleItem = (id: string) => {
+    setOpenItem((prev) => (prev === id ? null : id));
+  };
+
+  const filteredFaqs = FAQS.filter(
+    (item) =>
+      item.question.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.category.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  return (
+    <div className="min-h-screen bg-[#FCFAF8] py-12 sm:py-16 lg:py-20">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+        {/* Minimalist Luxury Header */}
+        <div className="text-center space-y-3">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-brand-blush/60 text-brand-primary text-[10px] font-bold tracking-widest uppercase border border-brand-primary/20">
+            <Sparkles className="w-3 h-3 text-brand-champagne" />
+            Help & Boutique Guidance
+          </div>
+          <h1 className="font-serif text-3xl sm:text-4xl lg:text-5xl text-brand-charcoal tracking-tight uppercase">
+            Frequently Asked Questions
+          </h1>
+          <p className="text-xs sm:text-sm text-zinc-500 max-w-lg mx-auto font-light leading-relaxed">
+            Everything you need to know about our handcrafted jewelry, secure ordering, fast shipping, and boutique care.
+          </p>
+
+          {/* Quick Search */}
+          <div className="pt-4 max-w-md mx-auto">
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="Search delivery, payments, returns..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-11 pr-4 py-3 rounded-2xl border border-brand-border/80 bg-white shadow-2xs text-xs sm:text-sm focus:outline-none focus:border-brand-primary transition-colors text-brand-charcoal"
+              />
+              <Search className="w-4 h-4 text-zinc-400 absolute left-4 top-1/2 -translate-y-1/2" />
+            </div>
+          </div>
+        </div>
+
+        {/* Accordion Questions List */}
+        <div className="space-y-4">
+          {filteredFaqs.length === 0 ? (
+            <div className="text-center py-12 bg-white rounded-3xl border border-brand-border/60 p-8 space-y-3">
+              <HelpCircle className="w-8 h-8 text-zinc-300 mx-auto" />
+              <p className="text-sm font-serif text-brand-charcoal">No questions matched your search</p>
+              <p className="text-xs text-zinc-400">
+                Try searching for keywords like "delivery", "bKash", or "exchange".
+              </p>
+            </div>
+          ) : (
+            filteredFaqs.map((item, idx) => {
+              const isOpen = openItem === item.id;
+
+              return (
+                <div
+                  key={item.id}
+                  className={`bg-white rounded-3xl border transition-all duration-300 overflow-hidden ${
+                    isOpen
+                      ? "border-brand-primary/40 shadow-sm ring-1 ring-brand-primary/10"
+                      : "border-brand-border/70 hover:border-brand-border hover:shadow-2xs"
+                  }`}
+                >
+                  <button
+                    type="button"
+                    onClick={() => toggleItem(item.id)}
+                    className="w-full p-5 sm:p-6 text-left flex items-center justify-between gap-4 cursor-pointer focus:outline-none select-none"
+                    aria-expanded={isOpen}
+                  >
+                    <div className="flex items-center gap-3.5 sm:gap-4 min-w-0">
+                      <span className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-brand-blush/60 text-brand-primary text-xs font-bold flex items-center justify-center shrink-0 border border-brand-primary/20">
+                        {idx + 1}
+                      </span>
+                      <div>
+                        <span className="text-[10px] uppercase font-bold tracking-wider text-brand-primary/80 block mb-0.5">
+                          {item.category}
+                        </span>
+                        <h3 className="font-serif text-base sm:text-lg text-brand-charcoal leading-snug">
+                          {item.question}
+                        </h3>
+                      </div>
+                    </div>
+
+                    <div
+                      className={`w-8 h-8 rounded-full border border-brand-border/70 flex items-center justify-center shrink-0 text-zinc-400 transition-transform duration-300 ${
+                        isOpen ? "rotate-180 bg-brand-primary text-white border-brand-primary" : "bg-zinc-50"
+                      }`}
+                    >
+                      <ChevronDown className="w-4 h-4" />
+                    </div>
+                  </button>
+
+                  {isOpen && (
+                    <div className="px-5 pb-6 sm:px-6 sm:pb-6 pt-1 border-t border-brand-border/40 animate-in fade-in slide-in-from-top-1 duration-200">
+                      <div className="pl-10 sm:pl-12">
+                        {item.answer({
+                          insideFee,
+                          outsideFee,
+                          freeThreshold,
+                          phone,
+                          waNumber,
+                          bkashNumber,
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })
+          )}
+        </div>
+
+        {/* Still Need Help Concierge Card */}
+        <div className="bg-gradient-to-r from-brand-blush/80 via-brand-ivory to-white rounded-3xl p-6 sm:p-8 border border-brand-primary/20 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-6 text-center sm:text-left">
+          <div className="space-y-1.5 max-w-md">
+            <h4 className="font-serif text-lg sm:text-xl text-brand-charcoal font-medium">
+              Still have questions or need personalized styling advice?
+            </h4>
+            <p className="text-xs text-zinc-600 leading-relaxed">
+              Our boutique concierge is active daily from 10:00 AM to 11:00 PM for custom bridal styling, live order tracking, and gift wrapping requests.
+            </p>
+          </div>
+
+          <div className="flex flex-col sm:flex-row items-center gap-3 shrink-0">
+            <a
+              href={`https://wa.me/${waNumber}?text=Hello%20Adorn%20by%20Mashfika,%20I%20have%20a%20question%20regarding%20your%20collection.`}
+              target="_blank"
+              rel="noreferrer"
+              className="px-5 py-3 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold shadow-sm transition-all flex items-center gap-2 cursor-pointer"
+            >
+              <MessageCircle className="w-4 h-4" />
+              WhatsApp Concierge
+            </a>
+            <Link
+              href="/shop"
+              className="px-5 py-3 rounded-full bg-white hover:bg-brand-ivory text-brand-charcoal border border-brand-border text-xs font-semibold shadow-2xs transition-all flex items-center gap-1.5"
+            >
+              Explore Collection
+              <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

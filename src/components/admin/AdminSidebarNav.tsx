@@ -6,6 +6,8 @@ import {
   LayoutDashboard,
   ShoppingBag,
   Package,
+  Ticket,
+  ShoppingCart,
   Settings,
   LogOut,
 } from "lucide-react";
@@ -42,6 +44,18 @@ export function AdminSidebarNav({ onNavigate }: AdminSidebarNavProps = {}) {
       href: "/admin/products",
       icon: Package,
       active: pathname.startsWith("/admin/products"),
+    },
+    {
+      name: "Coupons",
+      href: "/admin/coupons",
+      icon: Ticket,
+      active: pathname.startsWith("/admin/coupons"),
+    },
+    {
+      name: "Carts",
+      href: "/admin/carts",
+      icon: ShoppingCart,
+      active: pathname.startsWith("/admin/carts"),
     },
     {
       name: "Settings",

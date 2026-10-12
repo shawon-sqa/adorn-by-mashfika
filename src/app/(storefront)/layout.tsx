@@ -7,6 +7,7 @@ import { CartDrawer } from "@/components/storefront/CartDrawer";
 import { WishlistDrawer } from "@/components/storefront/WishlistDrawer";
 import { MobileBottomNav } from "@/components/storefront/MobileBottomNav";
 import { SearchOverlay } from "@/components/storefront/SearchOverlay";
+import { FirstOrderDiscountModal } from "@/components/storefront/FirstOrderDiscountModal";
 
 export default function StorefrontLayout({
   children,
@@ -21,6 +22,7 @@ export default function StorefrontLayout({
       <main className="flex-1 w-full">{children}</main>
       <CartDrawer />
       <WishlistDrawer />
+      <FirstOrderDiscountModal />
       <Footer />
 
       {/* Floating / Sticky Mobile Bottom Nav */}

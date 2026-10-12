@@ -1,31 +1,72 @@
 "use client";
 
-import { useState } from "react";
-import { CheckCircle2, Store, Bell, Shield, Phone, MapPin } from "lucide-react";
+import { useState, useEffect } from "react";
+import {
+  CheckCircle2,
+  Store,
+  Phone,
+  MapPin,
+  Loader2,
+  AlertCircle,
+  Gift,
+} from "lucide-react";
+import {
+  StoreSettings,
+  DEFAULT_STORE_SETTINGS,
+  fetchStoreSettings,
+  updateStoreSettings,
+} from "@/lib/data/storeSettings";
 
 export default function AdminSettingsPage() {
-  const [saved, setSaved] = useState(false);
+  const [settings, setSettings] = useState<StoreSettings>(DEFAULT_STORE_SETTINGS);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [toastMessage, setToastMessage] = useState<{
+    type: "success" | "info" | "error";
+    text: string;
+  } | null>(null);
 
-  const [settings, setSettings] = useState({
-    storeName: "Adorn by Mashfika",
-    tagline: "Elegance in Every Detail.",
-    contactPhone: "+880 1700-000000",
-    contactEmail: "hello@adornbymashfika.com",
-    address: "Gulshan-2 / Banani, Dhaka, Bangladesh",
-    insideDhakaDeliveryFee: "70",
-    outsideDhakaDeliveryFee: "130",
-    freeDeliveryThreshold: "2000",
-    bkashNumber: "01700-000000",
-  });
+  useEffect(() => {
+    let mounted = true;
+    fetchStoreSettings().then((data) => {
+      if (mounted) {
+        setSettings(data);
+        setLoading(false);
+      }
+    });
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
-  const handleChange = (field: string, val: string) => {
+  const showToast = (type: "success" | "info" | "error", text: string) => {
+    setToastMessage({ type, text });
+    if (type !== "info") {
+      setTimeout(() => setToastMessage(null), 3000);
+    }
+  };
+
+  const handleChange = (field: keyof StoreSettings, val: any) => {
     setSettings((prev) => ({ ...prev, [field]: val }));
   };
 
-  const handleSave = (e: React.FormEvent) => {
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+    setSaving(true);
+    showToast("info", "Saving Changes...");
+
+    try {
+      const res = await updateStoreSettings(settings);
+      if (res.success) {
+        showToast("success", "Changes Saved");
+      } else {
+        showToast("error", res.error || "Failed to save changes");
+      }
+    } catch {
+      showToast("error", "Error saving changes. Please try again.");
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -40,10 +81,24 @@ export default function AdminSettingsPage() {
         </p>
       </div>
 
-      {saved && (
-        <div className="p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs rounded-2xl flex items-center gap-2 animate-in fade-in">
-          <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-          Store settings updated successfully!
+      {toastMessage && (
+        <div
+          className={`p-4 rounded-2xl text-xs font-semibold flex items-center gap-2 border animate-in fade-in slide-in-from-top-2 ${
+            toastMessage.type === "success"
+              ? "bg-emerald-50 border-emerald-200 text-emerald-800"
+              : toastMessage.type === "info"
+              ? "bg-amber-50 border-amber-200 text-amber-800"
+              : "bg-rose-50 border-rose-200 text-rose-800"
+          }`}
+        >
+          {toastMessage.type === "success" ? (
+            <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+          ) : toastMessage.type === "info" ? (
+            <Loader2 className="w-4 h-4 text-amber-600 animate-spin flex-shrink-0" />
+          ) : (
+            <AlertCircle className="w-4 h-4 text-rose-600 flex-shrink-0" />
+          )}
+          <span>{toastMessage.text}</span>
         </div>
       )}
 
@@ -170,11 +225,81 @@ export default function AdminSettingsPage() {
           </div>
         </div>
 
+        {/* Promotions & Popups */}
+        <div className="bg-white rounded-3xl p-6 sm:p-8 border border-brand-border/80 shadow-2xs space-y-4">
+          <h2 className="font-serif text-lg text-brand-charcoal flex items-center gap-2">
+            <Gift className="w-4 h-4 text-brand-primary" />
+            Promotions & Popups
+          </h2>
+          <p className="text-xs text-zinc-500">
+            Control automated marketing overlays and boutique welcome gestures.
+          </p>
+
+          <div className="pt-2">
+            <div className="flex items-center justify-between p-4 rounded-2xl bg-brand-cream/50 border border-brand-border/60">
+              <div className="space-y-0.5">
+                <span className="text-xs font-semibold text-brand-charcoal block">
+                  Enable First-Order Discount Popup
+                </span>
+                <span className="text-[11px] text-zinc-500">
+                  Display the welcome gift box modal offering 10% off for first-time visitors
+                </span>
+              </div>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={
+                  settings.show_first_order_popup !== undefined
+                    ? settings.show_first_order_popup
+                    : settings.enableFirstOrderPopup
+                }
+                onClick={() => {
+                  const currentVal =
+                    settings.show_first_order_popup !== undefined
+                      ? settings.show_first_order_popup
+                      : settings.enableFirstOrderPopup;
+                  const nextVal = !currentVal;
+                  setSettings((prev) => ({
+                    ...prev,
+                    enableFirstOrderPopup: nextVal,
+                    show_first_order_popup: nextVal,
+                  }));
+                }}
+                className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                  (settings.show_first_order_popup !== undefined
+                    ? settings.show_first_order_popup
+                    : settings.enableFirstOrderPopup)
+                    ? "bg-brand-primary"
+                    : "bg-zinc-300"
+                }`}
+              >
+                <span
+                  className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
+                    (settings.show_first_order_popup !== undefined
+                      ? settings.show_first_order_popup
+                      : settings.enableFirstOrderPopup)
+                      ? "translate-x-5"
+                      : "translate-x-0"
+                  }`}
+                />
+              </button>
+            </div>
+          </div>
+        </div>
+
         <button
           type="submit"
-          className="px-6 py-3 rounded-xl bg-brand-primary hover:bg-brand-primary-hover text-white text-xs font-semibold shadow-2xs transition-colors cursor-pointer"
+          disabled={saving || loading}
+          className="px-6 py-3 rounded-xl bg-brand-primary hover:bg-brand-primary-hover text-white text-xs font-semibold shadow-2xs transition-colors cursor-pointer flex items-center gap-2 disabled:opacity-60"
         >
-          Save All Settings
+          {saving ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin" />
+              Saving Changes...
+            </>
+          ) : (
+            "Save All Settings"
+          )}
         </button>
       </form>
     </div>

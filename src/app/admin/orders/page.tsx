@@ -434,8 +434,8 @@ export default function AdminOrdersListPage() {
                 <strong className="text-brand-charcoal">
                   {orderToDelete.customer.fullName}
                 </strong>{" "}
-                ({formatPrice(orderToDelete.pricing.grandTotal)}) from both Supabase cloud database
-                and active records. This action cannot be reversed.
+                ({formatPrice(orderToDelete.pricing.grandTotal)}) from boutique order records
+                and dispatch queues. This action cannot be reversed.
               </p>
             </div>
 

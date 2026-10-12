@@ -37,6 +37,14 @@ export function OrderSuccessClient({ orderId }: OrderSuccessClientProps) {
           if (found) setOrder(found);
         }
       }
+
+      // Ensure abandoned cart session is finalized as CONVERTED in Supabase
+      import("@/lib/utils/cartTracker").then(({ markCartSessionConverted }) => {
+        markCartSessionConverted();
+      }).catch(() => {});
+      import("@/lib/data/cartsRecovery").then(({ markCartAsConverted }) => {
+        markCartAsConverted();
+      }).catch(() => {});
     } catch {
       // Ignore
     } finally {
@@ -229,10 +237,12 @@ export function OrderSuccessClient({ orderId }: OrderSuccessClientProps) {
         <div className="bg-zinc-50 p-6 sm:p-8 border-t border-brand-border/60 flex flex-col sm:flex-row items-center justify-between gap-4">
           {/* WhatsApp concierge */}
           <a
-            href={`https://wa.me/8801700000000?text=Hi%20Adorn%20by%20Mashfika%2C%20I%20have%20an%20inquiry%20regarding%20my%20order%20${orderId}`}
+            href={`https://wa.me/8801353655433?text=${encodeURIComponent(
+              `Hello Adorn by Mashfika, I would like to inquire about my order #${orderId}.`
+            )}`}
             target="_blank"
             rel="noreferrer"
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold transition-colors shadow-sm"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold transition-colors shadow-sm cursor-pointer"
           >
             <MessageCircle className="w-4 h-4" />
             Concierge WhatsApp Support

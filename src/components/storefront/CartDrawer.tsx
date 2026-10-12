@@ -2,19 +2,43 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { X, Plus, Minus, Trash2, ShoppingBag, ArrowRight } from "lucide-react";
+import {
+  X,
+  Plus,
+  Minus,
+  Trash2,
+  ShoppingBag,
+  ArrowRight,
+  Tag,
+  Loader2,
+  CheckCircle2,
+  AlertCircle,
+} from "lucide-react";
 import { useCartStore } from "@/lib/store/useCartStore";
 import { formatPrice } from "@/lib/utils/formatters";
+import { validateCouponCode } from "@/lib/data/supabaseCoupons";
+import { useStoreSettings } from "@/lib/data/storeSettings";
 
 export function CartDrawer() {
   const [mounted, setMounted] = useState(false);
+  const [couponInput, setCouponInput] = useState("");
+  const [couponLoading, setCouponLoading] = useState(false);
+  const [couponError, setCouponError] = useState<string | null>(null);
+  const [couponSuccess, setCouponSuccess] = useState<string | null>(null);
+  const storeSettings = useStoreSettings();
+
   const {
     items,
     isOpen,
+    appliedCoupon,
     closeCart,
     updateQuantity,
     removeItem,
     getSubtotal,
+    getDiscountAmount,
+    getFinalTotal,
+    applyCoupon,
+    removeCoupon,
     getTotalItems,
   } = useCartStore();
 
@@ -34,9 +58,49 @@ export function CartDrawer() {
     };
   }, [isOpen]);
 
+  const handleApplyCoupon = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setCouponError(null);
+    setCouponSuccess(null);
+
+    const code = couponInput.trim().toUpperCase();
+    if (!code) {
+      setCouponError("Please enter a coupon code.");
+      return;
+    }
+
+    setCouponLoading(true);
+    try {
+      const subtotal = getSubtotal();
+      const res = await validateCouponCode(code, subtotal);
+
+      if (!res.valid || !res.coupon) {
+        setCouponError(res.error || "Invalid coupon code.");
+        return;
+      }
+
+      applyCoupon(res.coupon, res.discountAmount || 0);
+      setCouponSuccess(`Coupon ${res.coupon.code} applied!`);
+      setCouponInput("");
+      setTimeout(() => setCouponSuccess(null), 3000);
+    } catch {
+      setCouponError("Could not validate coupon. Please try again.");
+    } finally {
+      setCouponLoading(false);
+    }
+  };
+
+  const handleRemoveCoupon = () => {
+    removeCoupon();
+    setCouponSuccess(null);
+    setCouponError(null);
+  };
+
   if (!mounted) return null;
 
   const subtotal = getSubtotal();
+  const discountAmount = getDiscountAmount();
+  const finalTotal = getFinalTotal();
   const totalCount = getTotalItems();
 
   return (
@@ -78,18 +142,23 @@ export function CartDrawer() {
         </div>
 
         {/* Free Delivery Bar */}
-        <div className="bg-brand-blush-subtle px-5 py-2.5 border-b border-brand-border/40 text-xs">
-          {subtotal >= 2000 ? (
-            <p className="text-emerald-700 font-medium text-center">
-              🎉 Congratulations! You have unlocked <strong>Free Delivery</strong> in Dhaka!
-            </p>
-          ) : (
-            <p className="text-brand-muted text-center">
-              Add <strong>{formatPrice(2000 - subtotal)}</strong> more for{" "}
-              <span className="text-brand-primary font-semibold">Free Delivery</span> in Dhaka.
-            </p>
-          )}
-        </div>
+        {(() => {
+          const threshold = Number(storeSettings.freeDeliveryThreshold) || 2000;
+          return (
+            <div className="bg-brand-blush-subtle px-5 py-2.5 border-b border-brand-border/40 text-xs">
+              {subtotal >= threshold ? (
+                <p className="text-emerald-700 font-medium text-center">
+                  🎉 Congratulations! You have unlocked <strong>Free Delivery</strong> in Dhaka!
+                </p>
+              ) : (
+                <p className="text-brand-muted text-center">
+                  Add <strong>{formatPrice(threshold - subtotal)}</strong> more for{" "}
+                  <span className="text-brand-primary font-semibold">Free Delivery</span> in Dhaka.
+                </p>
+              )}
+            </div>
+          );
+        })()}
 
         {/* Cart Item List */}
         <div className="flex-1 overflow-y-auto p-5 space-y-4 divide-y divide-brand-border/60">
@@ -193,13 +262,106 @@ export function CartDrawer() {
 
         {/* Footer actions */}
         {items.length > 0 && (
-          <div className="p-5 border-t border-brand-border bg-brand-ivory/50 space-y-3">
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-brand-muted">Subtotal</span>
-              <span className="font-bold text-base text-brand-charcoal">
-                {formatPrice(subtotal)}
-              </span>
+          <div className="p-5 border-t border-brand-border bg-brand-ivory/50 space-y-3.5">
+            {/* Coupon Code Redemption Section */}
+            <div className="space-y-2">
+              {appliedCoupon ? (
+                <div className="flex items-center justify-between p-2.5 rounded-xl bg-brand-blush/60 border border-brand-primary/30 text-xs animate-in fade-in">
+                  <div className="flex items-center gap-2">
+                    <span className="p-1 rounded-md bg-brand-primary text-white">
+                      <Tag className="w-3 h-3" />
+                    </span>
+                    <div>
+                      <span className="font-mono font-bold tracking-wider text-brand-primary">
+                        {appliedCoupon.code}
+                      </span>
+                      <span className="text-[10px] text-zinc-500 block">
+                        {appliedCoupon.type === "percentage"
+                          ? `${appliedCoupon.discount_value}% discount applied`
+                          : `${formatPrice(appliedCoupon.discount_value)} discount applied`}
+                      </span>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleRemoveCoupon}
+                    title="Remove coupon"
+                    className="p-1 text-zinc-400 hover:text-rose-600 rounded-lg hover:bg-white/80 transition-colors cursor-pointer"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              ) : (
+                <form onSubmit={handleApplyCoupon} className="space-y-1.5">
+                  <div className="flex gap-2">
+                    <div className="relative flex-1">
+                      <Tag className="w-3.5 h-3.5 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                      <input
+                        type="text"
+                        placeholder="Coupon code (e.g. ADORN50)"
+                        value={couponInput}
+                        onChange={(e) => {
+                          setCouponInput(e.target.value.toUpperCase());
+                          if (couponError) setCouponError(null);
+                        }}
+                        className="w-full pl-8 pr-3 py-2 rounded-xl border border-brand-border bg-white text-xs font-mono uppercase focus:outline-none focus:border-brand-primary tracking-wider"
+                      />
+                    </div>
+                    <button
+                      type="submit"
+                      disabled={couponLoading || !couponInput.trim()}
+                      className="px-4 py-2 rounded-xl bg-brand-primary text-white text-xs font-semibold hover:bg-brand-primary-hover transition-colors shadow-2xs disabled:opacity-50 cursor-pointer flex items-center justify-center min-w-[64px]"
+                    >
+                      {couponLoading ? (
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      ) : (
+                        "Apply"
+                      )}
+                    </button>
+                  </div>
+                  {couponError && (
+                    <p className="text-[11px] text-rose-600 flex items-center gap-1 font-medium animate-in fade-in">
+                      <AlertCircle className="w-3 h-3 flex-shrink-0" />
+                      {couponError}
+                    </p>
+                  )}
+                  {couponSuccess && (
+                    <p className="text-[11px] text-emerald-700 flex items-center gap-1 font-medium animate-in fade-in">
+                      <CheckCircle2 className="w-3 h-3 flex-shrink-0" />
+                      {couponSuccess}
+                    </p>
+                  )}
+                </form>
+              )}
             </div>
+
+            {/* Price Calculations */}
+            <div className="space-y-1.5 pt-1">
+              <div className="flex items-center justify-between text-xs text-zinc-600">
+                <span>Subtotal</span>
+                <span className="font-medium text-brand-charcoal">
+                  {formatPrice(subtotal)}
+                </span>
+              </div>
+
+              {discountAmount > 0 && (
+                <div className="flex items-center justify-between text-xs text-emerald-700 font-semibold animate-in fade-in">
+                  <span className="flex items-center gap-1">
+                    <Tag className="w-3 h-3" />
+                    Coupon Discount
+                  </span>
+                  <span>-{formatPrice(discountAmount)}</span>
+                </div>
+              )}
+
+              <div className="flex items-center justify-between text-sm pt-2 border-t border-brand-border/60">
+                <span className="font-semibold text-brand-charcoal">Total Amount</span>
+                <span className="font-bold text-base text-brand-primary">
+                  {formatPrice(finalTotal)}
+                </span>
+              </div>
+            </div>
+
             <p className="text-[11px] text-zinc-500">
               Taxes & standard delivery calculated at checkout (Inside Dhaka: ৳80 | Outside: ৳150).
             </p>
@@ -207,7 +369,7 @@ export function CartDrawer() {
             <Link
               href="/checkout"
               onClick={closeCart}
-              className="w-full flex items-center justify-center gap-2 py-3.5 px-6 rounded-full bg-brand-primary text-white font-medium text-sm hover:bg-brand-primary-hover transition-all shadow-md hover:shadow-lg"
+              className="w-full flex items-center justify-center gap-2 py-3.5 px-6 rounded-full bg-brand-primary text-white font-medium text-sm hover:bg-brand-primary-hover transition-all shadow-md hover:shadow-lg cursor-pointer"
             >
               Proceed to Checkout
               <ArrowRight className="w-4 h-4" />
@@ -215,7 +377,7 @@ export function CartDrawer() {
 
             <button
               onClick={closeCart}
-              className="w-full py-2 text-xs text-brand-muted hover:text-brand-charcoal tracking-wide transition-colors uppercase font-medium"
+              className="w-full py-1.5 text-xs text-brand-muted hover:text-brand-charcoal tracking-wide transition-colors uppercase font-medium cursor-pointer"
             >
               Continue Shopping
             </button>

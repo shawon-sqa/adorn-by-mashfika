@@ -103,7 +103,7 @@ export default function AboutPage() {
 
           <div className="space-y-5 text-zinc-600 text-sm sm:text-base leading-relaxed font-light">
             <p>
-              Adorn by Mashfika began not simply as an e-commerce brand, but as an intimate creative pursuit born from a genuine adoration for traditional South Asian jewelry and modern feminine aesthetics. Founded by <strong className="font-medium text-brand-charcoal">Mashfika Rahman</strong> in Dhaka, the boutique was envisioned to bring women pieces that evoke royal splendor without feeling cumbersome or fleeting.
+              Adorn by Mashfika began not simply as an e-commerce brand, but as an intimate creative pursuit born from a genuine adoration for traditional South Asian jewelry and modern feminine aesthetics. Founded by <strong className="font-medium text-brand-charcoal">Mashfika Islam </strong> in Dhaka, the boutique was envisioned to bring women pieces that evoke royal splendor without feeling cumbersome or fleeting.
             </p>
             <p>
               Growing up captivated by the intricate majesty of classical Mughal Kundan, heirloom Polki motifs, and luminous cultured pearls, Mashfika saw an opportunity to celebrate these centuries-old craft traditions in versatile, contemporary silhouettes. Whether it is an ethereal floral jhumka for an intimate family evening or an opulent royal choker for your grand bridal celebration, each curation embodies delicate poise and effortless confidence.

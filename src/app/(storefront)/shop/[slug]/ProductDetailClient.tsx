@@ -292,11 +292,15 @@ export function ProductDetailClient({ product, relatedProducts }: ProductDetailC
               </div>
             )}
 
-            {/* Badges: Sold Out or Promo Badge */}
+            {/* Badges: Sold Out, Discount Percentage, or Promo Badge */}
             {isOverallProductSoldOut ? (
               <span className="absolute top-5 left-5 bg-rose-600/95 backdrop-blur-xs text-white text-xs font-bold px-3.5 py-1.5 rounded-full uppercase tracking-wider shadow-md z-10 pointer-events-none flex items-center gap-1.5">
                 <Ban className="w-3.5 h-3.5" />
                 Sold Out
+              </span>
+            ) : product.originalPrice && product.originalPrice > product.price ? (
+              <span className="absolute top-5 left-5 bg-gradient-to-r from-rose-500 to-[#C59B9B] text-white text-xs font-bold px-3.5 py-1.5 rounded-full uppercase tracking-wider shadow-sm z-10 pointer-events-none border border-rose-300/40">
+                -{Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)}% OFF
               </span>
             ) : product.badge ? (
               <span className="absolute top-5 left-5 bg-white/95 backdrop-blur-xs text-brand-charcoal text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider shadow-xs z-10 pointer-events-none">
@@ -438,9 +442,11 @@ export function ProductDetailClient({ product, relatedProducts }: ProductDetailC
                 {formatPrice(product.originalPrice)}
               </span>
             )}
-            {product.originalPrice && (
-              <span className="text-xs font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">
-                Save {formatPrice(product.originalPrice - product.price)}
+            {product.originalPrice && product.originalPrice > product.price && (
+              <span className="text-xs font-semibold text-rose-800 bg-rose-50 border border-rose-200/80 px-2.5 py-1 rounded-full flex items-center gap-1.5 shadow-2xs">
+                <span>Save {Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)}%</span>
+                <span className="text-rose-400">•</span>
+                <span>({formatPrice(product.originalPrice - product.price)})</span>
               </span>
             )}
           </div>
@@ -692,7 +698,7 @@ export function ProductDetailClient({ product, relatedProducts }: ProductDetailC
                 </label>
                 <input
                   type="text"
-                  placeholder="e.g. Mashfika Rahman"
+                  placeholder="e.g. Mashfika"
                   value={reviewAuthor}
                   onChange={(e) => setReviewAuthor(e.target.value)}
                   className="w-full px-3.5 py-2.5 rounded-xl border border-brand-border text-xs focus:outline-none focus:border-brand-primary bg-brand-ivory/20"

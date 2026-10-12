@@ -84,11 +84,15 @@ export function ProductCard({ product }: ProductCardProps) {
           )}
         </Link>
 
-        {/* Badges: Sold Out or Promo Badge */}
+        {/* Badges: Sold Out, Discount Percentage, or Promo Badge */}
         {isSoldOut ? (
           <span className="absolute top-3 left-3 bg-rose-600/95 backdrop-blur-xs text-white text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider shadow-md z-10 pointer-events-none flex items-center gap-1">
             <Ban className="w-3 h-3" />
             Sold Out
+          </span>
+        ) : product.originalPrice && product.originalPrice > product.price ? (
+          <span className="absolute top-3 left-3 bg-gradient-to-r from-rose-500 to-[#C59B9B] text-white text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider shadow-sm z-10 pointer-events-none border border-rose-300/40">
+            -{Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)}% OFF
           </span>
         ) : product.badge ? (
           <span className="absolute top-3 left-3 bg-white/95 backdrop-blur-xs text-brand-charcoal text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider shadow-xs z-10 pointer-events-none">
@@ -112,7 +116,7 @@ export function ProductCard({ product }: ProductCardProps) {
           />
         </button>
 
-        {/* Quick Action Floating Overlay */}
+        {/* Action Floating Overlay */}
         <div className="absolute inset-x-0 bottom-3 px-4 flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10">
           <button
             type="button"
@@ -129,7 +133,7 @@ export function ProductCard({ product }: ProductCardProps) {
             ) : (
               <>
                 <Plus className="w-3.5 h-3.5" />
-                Quick Add
+                Add to Cart
               </>
             )}
           </button>

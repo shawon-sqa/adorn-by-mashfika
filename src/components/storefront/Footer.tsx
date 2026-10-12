@@ -1,7 +1,17 @@
+"use client";
+
 import Link from "next/link";
 import { Phone, Mail, MapPin } from "lucide-react";
+import { useStoreSettings } from "@/lib/data/storeSettings";
 
 export function Footer() {
+  const storeSettings = useStoreSettings();
+  const phone = storeSettings.contactPhone || "01353655433";
+  const rawPhone = phone.replace(/\D/g, "") || "01353655433";
+  const waNumber = rawPhone.startsWith("88") ? rawPhone : `88${rawPhone}`;
+  const email = storeSettings.contactEmail || "adornbymashfika@gmail.com";
+  const address = storeSettings.address || "Dhaka, Bangladesh";
+
   return (
     <footer className="bg-[#171616] text-[#E0DCD7] border-t border-brand-primary/20 mt-auto">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 lg:py-16">
@@ -9,10 +19,10 @@ export function Footer() {
           {/* Brand Info */}
           <div className="space-y-4">
             <h3 className="font-serif text-2xl tracking-wide text-white">
-              Adorn by Mashfika
+              {storeSettings.storeName || "Adorn by Mashfika"}
             </h3>
             <p className="text-xs uppercase tracking-[0.2em] text-brand-champagne font-medium">
-              Elegance in Every Detail
+              {storeSettings.tagline || "Elegance in Every Detail"}
             </p>
             <p className="text-sm text-zinc-400 leading-relaxed">
               Curated jewelry, handpicked accessories, and bespoke contemporary fashion designed to make every occasion memorable.
@@ -80,9 +90,14 @@ export function Footer() {
           {/* Customer Care */}
           <div className="space-y-3">
             <h4 className="text-sm font-semibold tracking-wider uppercase text-white font-sans">
-              Customer Support
+              Customer Care
             </h4>
             <ul className="space-y-2 text-sm text-zinc-400">
+              <li>
+                <Link href="/faq" className="hover:text-brand-champagne transition-colors font-medium text-white/90 flex items-center gap-1.5">
+                  Frequently Asked Questions (FAQ)
+                </Link>
+              </li>
               <li>
                 <Link href="/track-order" className="hover:text-brand-champagne transition-colors">
                   Track Your Order
@@ -96,11 +111,6 @@ export function Footer() {
               <li>
                 <Link href="/returns-exchange" className="hover:text-brand-champagne transition-colors">
                   Returns & Exchange Policy
-                </Link>
-              </li>
-              <li>
-                <Link href="/faq" className="hover:text-brand-champagne transition-colors">
-                  Care Guide & FAQs
                 </Link>
               </li>
               <li>
@@ -119,26 +129,26 @@ export function Footer() {
             <div className="space-y-2.5 text-sm text-zinc-400">
               <div className="flex items-start space-x-2.5">
                 <MapPin className="h-4 w-4 text-brand-champagne flex-shrink-0 mt-0.5" />
-                <span>Dhaka, Bangladesh</span>
+                <span>{address}</span>
               </div>
               <div className="flex items-center space-x-2.5">
                 <Phone className="h-4 w-4 text-brand-champagne flex-shrink-0" />
                 <a
-                  href="https://wa.me/8801353655433"
+                  href={`https://wa.me/${waNumber}`}
                   target="_blank"
                   rel="noreferrer"
                   className="hover:text-brand-champagne transition-colors"
                 >
-                  01353655433 (WhatsApp available)
+                  {phone} (WhatsApp available)
                 </a>
               </div>
               <div className="flex items-center space-x-2.5">
                 <Mail className="h-4 w-4 text-brand-champagne flex-shrink-0" />
                 <a
-                  href="mailto:adornbymashfika@gmail.com"
+                  href={`mailto:${email}`}
                   className="hover:text-brand-champagne transition-colors"
                 >
-                  adornbymashfika@gmail.com
+                  {email}
                 </a>
               </div>
             </div>

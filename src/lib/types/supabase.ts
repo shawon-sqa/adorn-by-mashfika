@@ -43,3 +43,26 @@ export interface SupabaseProduct {
   created_at: string;
 }
 
+export type CouponType = "percentage" | "fixed";
+export type CouponRedemptionType = "one_time" | "limited" | "unlimited";
+export type CouponStatus = "active" | "used_up" | "disabled";
+
+export interface SupabaseCoupon {
+  id: string;
+  code: string;
+  type: CouponType;
+  discount_value: number;
+  description?: string | null;
+  min_order_amount?: number | null;
+  requires_email?: boolean;
+  requires_phone?: boolean;
+  redemption_type: CouponRedemptionType;
+  max_uses?: number | null;
+  max_uses_per_customer?: number;
+  used_count: number;
+  starts_at?: string | null;
+  ends_at?: string | null;
+  status: CouponStatus;
+  created_at?: string;
+}
+

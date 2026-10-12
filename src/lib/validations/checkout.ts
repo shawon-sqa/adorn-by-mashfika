@@ -78,6 +78,8 @@ export interface OrderRecord {
     subtotal: number;
     shippingFee: number;
     grandTotal: number;
+    discountAmount?: number;
+    couponCode?: string;
   };
   estimatedDelivery: string;
 }

@@ -8,37 +8,63 @@ interface LogisticsMeta {
   courierNotes?: string;
 }
 
+export interface OrderCouponMeta {
+  couponCode?: string;
+  discountAmount?: number;
+}
+
 function parseOrderNotes(rawNotes?: string | null): {
   cleanNotes?: string;
   logistics?: LogisticsMeta;
+  couponMeta?: OrderCouponMeta;
 } {
   if (!rawNotes) return {};
-  const metaRegex = /<!--ADORN_LOGISTICS:(.*?)-->/;
-  const match = rawNotes.match(metaRegex);
-  if (match && match[1]) {
+  let currentNotes = rawNotes;
+  let logistics: LogisticsMeta | undefined;
+  let couponMeta: OrderCouponMeta | undefined;
+
+  const logisticsRegex = /<!--ADORN_LOGISTICS:(.*?)-->/;
+  const logMatch = currentNotes.match(logisticsRegex);
+  if (logMatch && logMatch[1]) {
     try {
-      const logistics: LogisticsMeta = JSON.parse(match[1]);
-      const cleanNotes = rawNotes.replace(metaRegex, "").trim();
-      return {
-        cleanNotes: cleanNotes || undefined,
-        logistics,
-      };
+      logistics = JSON.parse(logMatch[1]);
+      currentNotes = currentNotes.replace(logisticsRegex, "");
     } catch {
       // Fallback
     }
   }
-  return { cleanNotes: rawNotes };
+
+  const couponRegex = /<!--ADORN_COUPON:(.*?)-->/;
+  const cpnMatch = currentNotes.match(couponRegex);
+  if (cpnMatch && cpnMatch[1]) {
+    try {
+      couponMeta = JSON.parse(cpnMatch[1]);
+      currentNotes = currentNotes.replace(couponRegex, "");
+    } catch {
+      // Fallback
+    }
+  }
+
+  return {
+    cleanNotes: currentNotes.trim() || undefined,
+    logistics,
+    couponMeta,
+  };
 }
 
 export function encodeOrderNotes(
   cleanNotes: string = "",
-  logistics?: LogisticsMeta
+  logistics?: LogisticsMeta,
+  couponMeta?: OrderCouponMeta
 ): string {
-  if (!logistics || (!logistics.courierName && !logistics.trackingNumber && !logistics.courierNotes)) {
-    return cleanNotes.trim();
+  let result = cleanNotes.trim();
+  if (couponMeta && (couponMeta.couponCode || couponMeta.discountAmount)) {
+    result = `${result}${result ? "\n\n" : ""}<!--ADORN_COUPON:${JSON.stringify(couponMeta)}-->`;
   }
-  const clean = cleanNotes ? cleanNotes.trim() + "\n\n" : "";
-  return `${clean}<!--ADORN_LOGISTICS:${JSON.stringify(logistics)}-->`;
+  if (logistics && (logistics.courierName || logistics.trackingNumber || logistics.courierNotes)) {
+    result = `${result}${result ? "\n\n" : ""}<!--ADORN_LOGISTICS:${JSON.stringify(logistics)}-->`;
+  }
+  return result.trim();
 }
 
 export async function fetchSupabaseOrders(): Promise<AdminOrderRecord[]> {
@@ -64,7 +90,7 @@ export async function fetchSupabaseOrders(): Promise<AdminOrderRecord[]> {
         imageUrl: item.image_url || undefined,
       }));
 
-      const { cleanNotes, logistics } = parseOrderNotes(ord.notes);
+      const { cleanNotes, logistics, couponMeta } = parseOrderNotes(ord.notes);
 
       return {
         orderId: ord.order_number,
@@ -97,6 +123,8 @@ export async function fetchSupabaseOrders(): Promise<AdminOrderRecord[]> {
           subtotal: ord.subtotal,
           shippingFee: ord.delivery_fee,
           grandTotal: ord.total,
+          discountAmount: couponMeta?.discountAmount,
+          couponCode: couponMeta?.couponCode,
         },
         estimatedDelivery:
           ord.delivery_zone === "inside_dhaka"

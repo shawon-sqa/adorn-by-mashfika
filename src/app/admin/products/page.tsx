@@ -305,7 +305,7 @@ export default function AdminProductsListPage() {
                 <strong className="text-brand-charcoal">
                   "{productToDelete.title}"
                 </strong>
-                ? This will permanently delete the item from your Supabase database and inventory catalog.
+                ? This will permanently delete the item from your boutique database and inventory catalog.
               </p>
             </div>
 

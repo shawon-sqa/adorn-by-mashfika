@@ -17,11 +17,13 @@ import {
 import { useCartStore } from "@/lib/store/useCartStore";
 import { useWishlistStore } from "@/lib/store/useWishlistStore";
 import { SearchOverlay } from "@/components/storefront/SearchOverlay";
+import { useStoreSettings } from "@/lib/data/storeSettings";
 
 export function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchOverlayOpen, setSearchOverlayOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const storeSettings = useStoreSettings();
 
   const { openCart, getTotalItems } = useCartStore();
   const { openWishlist, getTotalFavorites } = useWishlistStore();
@@ -50,15 +52,20 @@ export function Navbar() {
     { name: "Jewelry", href: "/shop?category=jewelry" },
     { name: "Accessories", href: "/shop?category=accessories" },
     { name: "Fashion", href: "/shop?category=fashion" },
+    { name: "FAQ", href: "/faq" },
     { name: "About Us", href: "/about" },
   ];
+
+  const freeDeliveryThreshold = Number(storeSettings.freeDeliveryThreshold) || 2000;
+  const rawPhone = storeSettings.contactPhone.replace(/\D/g, "") || "01353655433";
+  const waNumber = rawPhone.startsWith("88") ? rawPhone : `88${rawPhone}`;
 
   return (
     <>
       <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-brand-border/70 transition-all shadow-2xs">
         {/* Top Announcement Bar */}
         <div className="bg-brand-primary text-white text-[11px] sm:text-xs py-1.5 px-4 text-center tracking-wider uppercase font-medium">
-          <span>✨ Free Delivery Across Dhaka on Orders Above ৳ 2,000 ✨</span>
+          <span>✨ Free Delivery Across Dhaka on Orders Above ৳ {freeDeliveryThreshold.toLocaleString()} ✨</span>
         </div>
 
         <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -291,10 +298,10 @@ export function Navbar() {
             <div className="p-5 border-t border-brand-border/70 bg-[#FCFAF8] space-y-2 text-xs text-zinc-500">
               <div className="flex items-center gap-2 text-brand-charcoal font-semibold">
                 <Phone className="w-3.5 h-3.5 text-brand-primary" />
-                <span>Concierge: 01353655433</span>
+                <span>Concierge: {storeSettings.contactPhone || "01353655433"}</span>
               </div>
               <a
-                href="https://wa.me/8801353655433"
+                href={`https://wa.me/${waNumber}`}
                 target="_blank"
                 rel="noreferrer"
                 className="flex items-center gap-1.5 text-emerald-700 font-medium hover:underline text-[11px]"

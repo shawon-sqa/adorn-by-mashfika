@@ -335,7 +335,7 @@ export function EditProductClient({ productId }: EditProductClientProps) {
                 Product Imagery ({images.length} photos)
               </label>
               <p className="text-xs text-zinc-400 mt-0.5">
-                Manage all product angles. Photos are saved in Supabase bucket <code className="text-brand-primary">product-images</code>.
+                Manage all product angles and high-resolution boutique showcase images.
               </p>
             </div>
             <label className="px-3.5 py-1.5 rounded-xl border border-brand-border bg-white text-xs font-medium text-brand-charcoal hover:bg-zinc-50 transition-colors cursor-pointer flex items-center gap-1.5 shadow-2xs">
@@ -421,7 +421,7 @@ export function EditProductClient({ productId }: EditProductClientProps) {
                 Click to upload product photos
               </span>
               <span className="text-[11px] text-zinc-400 mt-0.5">
-                Saved directly to Supabase `product-images` bucket
+                High resolution JPEG, PNG, or WebP boutique photos
               </span>
               <input
                 type="file"
@@ -436,7 +436,7 @@ export function EditProductClient({ productId }: EditProductClientProps) {
           {uploadingImages && (
             <div className="p-3 bg-brand-blush/60 border border-brand-primary/20 rounded-xl flex items-center gap-2 text-xs text-brand-primary font-medium animate-pulse">
               <div className="w-4 h-4 border-2 border-brand-primary border-t-transparent rounded-full animate-spin flex-shrink-0" />
-              <span>{uploadStatusText || "Uploading images to Supabase storage..."}</span>
+              <span>{uploadStatusText || "Uploading images to boutique catalog..."}</span>
             </div>
           )}
         </div>
@@ -656,7 +656,7 @@ export function EditProductClient({ productId }: EditProductClientProps) {
             {isSubmitting ? (
               <>
                 <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                Updating in Supabase...
+                Saving Changes...
               </>
             ) : (
               "Save Changes"

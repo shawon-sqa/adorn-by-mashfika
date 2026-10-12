@@ -120,3 +120,67 @@ export async function fetchSupabaseProductBySlug(slug: string): Promise<Product 
   // Fallback to local mock data
   return PRODUCTS_DATA.find((p) => p.slug === slug);
 }
+
+/**
+ * Decrement stock for ordered items from Supabase 'products' table.
+ * Supports both RPC 'decrement_product_stock' and direct table update.
+ */
+export async function decrementProductStock(
+  productId: string,
+  quantityToDeduct: number
+): Promise<{ success: boolean; newStock?: number; error?: string }> {
+  try {
+    const supabase = createBrowserClient();
+    console.log(`[Inventory] Decrementing stock for product ${productId} by ${quantityToDeduct}`);
+
+    // Method 1: Try dedicated RPC if defined in Supabase
+    try {
+      const { data: rpcData, error: rpcError } = await supabase.rpc(
+        "decrement_product_stock",
+        {
+          product_id: productId,
+          quantity_to_deduct: quantityToDeduct,
+        }
+      );
+
+      if (!rpcError) {
+        console.log(`[Inventory] Stock decremented via RPC for ${productId}:`, rpcData);
+        return { success: true, newStock: rpcData };
+      }
+    } catch {
+      // RPC may not exist in database, proceed to direct update
+    }
+
+    // Method 2: Fetch current stock and update directly
+    const { data: currentProduct, error: fetchError } = await supabase
+      .from("products")
+      .select("id, stock")
+      .eq("id", productId)
+      .single();
+
+    if (fetchError || !currentProduct) {
+      console.warn(`[Inventory] Product ${productId} not found in products table:`, fetchError?.message);
+      return { success: false, error: fetchError?.message || "Product not found" };
+    }
+
+    const currentStock = Number(currentProduct.stock) || 0;
+    const newStock = Math.max(0, currentStock - quantityToDeduct);
+
+    const { error: updateError } = await supabase
+      .from("products")
+      .update({ stock: newStock })
+      .eq("id", productId);
+
+    if (updateError) {
+      console.error(`[Inventory] Failed to update stock for ${productId}:`, updateError.message);
+      return { success: false, error: updateError.message };
+    }
+
+    console.log(`[Inventory] Product ${productId} stock updated: ${currentStock} -> ${newStock}`);
+    return { success: true, newStock };
+  } catch (err: any) {
+    console.error(`[Inventory] Error decrementing stock for ${productId}:`, err);
+    return { success: false, error: err?.message };
+  }
+}
+

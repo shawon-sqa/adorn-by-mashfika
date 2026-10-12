@@ -14,10 +14,16 @@ import {
   Plus,
   Minus,
   Trash2,
+  Tag,
+  Loader2,
+  X,
 } from "lucide-react";
 import { useCartStore } from "@/lib/store/useCartStore";
 import { formatPrice } from "@/lib/utils/formatters";
 import { checkoutFormSchema, OrderRecord } from "@/lib/validations/checkout";
+import { validateCouponCode } from "@/lib/data/supabaseCoupons";
+import { encodeOrderNotes } from "@/lib/data/supabaseOrders";
+import { useStoreSettings } from "@/lib/data/storeSettings";
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -25,8 +31,34 @@ export default function CheckoutPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
   const [stockNotice, setStockNotice] = useState<string | null>(null);
+  const storeSettings = useStoreSettings();
 
-  const { items, getSubtotal, clearCart, updateQuantity, removeItem } = useCartStore();
+  const insideFee = Number(storeSettings.insideDhakaDeliveryFee) || 70;
+  const outsideFee = Number(storeSettings.outsideDhakaDeliveryFee) || 130;
+  const freeThreshold = Number(storeSettings.freeDeliveryThreshold) || 2000;
+  const bkashNumber = storeSettings.bkashNumber || "01353655433";
+
+  // Coupon state
+  const [couponInput, setCouponInput] = useState("");
+  const [couponLoading, setCouponLoading] = useState(false);
+  const [couponError, setCouponError] = useState<string | null>(null);
+  const [couponSuccess, setCouponSuccess] = useState<string | null>(null);
+
+  const {
+    items,
+    appliedCoupon,
+    shopperName,
+    shopperPhone,
+    shopperEmail,
+    setShopperDetails,
+    getSubtotal,
+    getDiscountAmount,
+    applyCoupon,
+    removeCoupon,
+    clearCart,
+    updateQuantity,
+    removeItem,
+  } = useCartStore();
 
   const [formData, setFormData] = useState({
     fullName: "",
@@ -42,7 +74,14 @@ export default function CheckoutPage() {
 
   useEffect(() => {
     setMounted(true);
-  }, []);
+    if (shopperName || shopperPhone) {
+      setFormData((prev) => ({
+        ...prev,
+        fullName: prev.fullName || shopperName || "",
+        phone: prev.phone || shopperPhone || "",
+      }));
+    }
+  }, [shopperName, shopperPhone]);
 
   if (!mounted) {
     return (
@@ -53,18 +92,69 @@ export default function CheckoutPage() {
   }
 
   const subtotal = getSubtotal();
+  // Compute discount amount accurately:
+  // If percentage: Math.round((subtotal * coupon.discount_value) / 100)
+  // If fixed: Math.min(coupon.discount_value, subtotal)
+  const appliedDiscount = appliedCoupon
+    ? appliedCoupon.min_order_amount && subtotal < appliedCoupon.min_order_amount
+      ? 0
+      : appliedCoupon.type === "percentage"
+      ? Math.round((subtotal * appliedCoupon.discount_value) / 100)
+      : Math.min(appliedCoupon.discount_value, subtotal)
+    : 0;
 
-  // Dynamic Shipping Calculation:
-  // Inside Dhaka: ৳70 (Free if subtotal >= ৳2,000)
-  // Outside Dhaka: ৳130 (Flat)
+  // Dynamic Shipping Calculation from Store Settings:
   const shippingFee =
     formData.deliveryZone === "inside_dhaka"
-      ? subtotal >= 2000
+      ? subtotal >= freeThreshold
         ? 0
-        : 70
-      : 130;
+        : insideFee
+      : outsideFee;
 
-  const grandTotal = subtotal + shippingFee;
+  // Grand total calculation:
+  const grandTotal = Math.max(0, subtotal - appliedDiscount) + shippingFee;
+
+  const handleApplyCoupon = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setCouponError(null);
+    setCouponSuccess(null);
+
+    const code = couponInput.trim().toUpperCase();
+    if (!code) {
+      setCouponError("Please enter a coupon code.");
+      return;
+    }
+
+    setCouponLoading(true);
+    try {
+      const res = await validateCouponCode(code, subtotal);
+
+      if (!res.valid || !res.coupon) {
+        setCouponError(res.error || "Invalid coupon code.");
+        return;
+      }
+
+      const calculatedDiscount =
+        res.coupon.type === "percentage"
+          ? Math.round((subtotal * res.coupon.discount_value) / 100)
+          : Math.min(res.coupon.discount_value, subtotal);
+
+      applyCoupon(res.coupon, calculatedDiscount);
+      setCouponSuccess(`Coupon ${res.coupon.code} applied!`);
+      setCouponInput("");
+      setTimeout(() => setCouponSuccess(null), 3000);
+    } catch {
+      setCouponError("Could not validate coupon. Please try again.");
+    } finally {
+      setCouponLoading(false);
+    }
+  };
+
+  const handleRemoveCoupon = () => {
+    removeCoupon();
+    setCouponSuccess(null);
+    setCouponError(null);
+  };
 
   // Empty cart fallback
   if (items.length === 0) {
@@ -94,14 +184,25 @@ export default function CheckoutPage() {
     field: string,
     value: string
   ) => {
-    setFormData((prev) => ({
-      ...prev,
-      [field]: value,
-      // Auto-update default city when zone switches
-      ...(field === "deliveryZone" && {
-        city: value === "inside_dhaka" ? "Dhaka" : prev.city === "Dhaka" ? "" : prev.city,
-      }),
-    }));
+    setFormData((prev) => {
+      const next = {
+        ...prev,
+        [field]: value,
+        // Auto-update default city when zone switches
+        ...(field === "deliveryZone" && {
+          city: value === "inside_dhaka" ? "Dhaka" : prev.city === "Dhaka" ? "" : prev.city,
+        }),
+      };
+
+      if (field === "fullName" || field === "phone") {
+        setShopperDetails({
+          name: field === "fullName" ? value : next.fullName,
+          phone: field === "phone" ? value : next.phone,
+        });
+      }
+
+      return next;
+    });
 
     if (validationErrors[field]) {
       setValidationErrors((prev) => {
@@ -177,6 +278,8 @@ export default function CheckoutPage() {
         subtotal,
         shippingFee,
         grandTotal,
+        discountAmount: appliedDiscount > 0 ? appliedDiscount : undefined,
+        couponCode: appliedCoupon ? appliedCoupon.code : undefined,
       },
       estimatedDelivery,
     };
@@ -185,6 +288,12 @@ export default function CheckoutPage() {
     try {
       const { createBrowserClient } = await import("@/lib/supabase/client");
       const supabase = createBrowserClient();
+
+      // Encode coupon metadata alongside customer notes so admin portal can display the used coupon
+      const finalNotes = encodeOrderNotes(formData.notes || "", undefined, {
+        couponCode: appliedCoupon ? appliedCoupon.code : undefined,
+        discountAmount: appliedDiscount > 0 ? appliedDiscount : undefined,
+      });
 
       const { data: insertedOrder, error: orderError } = await supabase
         .from("orders")
@@ -199,13 +308,40 @@ export default function CheckoutPage() {
           subtotal,
           delivery_fee: shippingFee,
           total: grandTotal,
+          total_amount: grandTotal,
+          discount_amount: appliedDiscount > 0 ? appliedDiscount : 0,
+          coupon_code: appliedCoupon ? appliedCoupon.code : null,
           status: "pending",
           bkash_sender: formData.bkashSenderPhone || null,
           bkash_trx_id: formData.bkashTrxId || null,
-          notes: formData.notes || null,
-        })
+          notes: finalNotes || null,
+        } as any)
         .select()
         .single();
+
+      if (orderError && (orderError.message?.includes("total_amount") || orderError.message?.includes("discount_amount") || orderError.message?.includes("coupon_code"))) {
+        // Fallback for database schema if extra columns aren't in table schema
+        await supabase
+          .from("orders")
+          .insert({
+            order_number: generatedId,
+            customer_name: formData.fullName,
+            customer_phone: formData.phone,
+            delivery_zone: formData.deliveryZone,
+            address: formData.address,
+            city: formData.city,
+            payment_method: formData.paymentMethod,
+            subtotal,
+            delivery_fee: shippingFee,
+            total: grandTotal,
+            status: "pending",
+            bkash_sender: formData.bkashSenderPhone || null,
+            bkash_trx_id: formData.bkashTrxId || null,
+            notes: finalNotes || null,
+          })
+          .select()
+          .single();
+      }
 
       if (!orderError && insertedOrder) {
         // Insert order items
@@ -223,6 +359,16 @@ export default function CheckoutPage() {
 
         await supabase.from("order_items").insert(orderItemsPayload);
       }
+
+      // Loop through all ordered items and decrement stock for each product in Supabase
+      const { decrementProductStock } = await import("@/lib/data/supabaseProducts");
+      for (const item of items) {
+        try {
+          await decrementProductStock(item.product.id, item.quantity);
+        } catch (stockErr) {
+          console.error(`[Checkout] Failed to decrement stock for item ${item.product.id}:`, stockErr);
+        }
+      }
     } catch (sbErr) {
       console.warn("Supabase insertion fallback to local storage:", sbErr);
     }
@@ -236,6 +382,17 @@ export default function CheckoutPage() {
       localStorage.setItem(`adorn_order_${generatedId}`, JSON.stringify(orderRecord));
     } catch {
       // Graceful fallback
+    }
+
+    // 3. Mark abandoned cart session as CONVERTED so it is updated in Supabase abandoned_carts
+    try {
+      const { markCartSessionConverted } = await import("@/lib/utils/cartTracker");
+      await markCartSessionConverted();
+
+      const { markCartAsConverted } = await import("@/lib/data/cartsRecovery");
+      await markCartAsConverted();
+    } catch (convertErr) {
+      console.warn("[Checkout] Failed to mark cart as converted:", convertErr);
     }
 
     // Clear cart and navigate to confirmation
@@ -283,7 +440,7 @@ export default function CheckoutPage() {
                 </label>
                 <input
                   type="text"
-                  placeholder="Enter your full name (e.g., Mashfika Rahman)"
+                  placeholder="Enter your full name (e.g., Mashfika)"
                   value={formData.fullName}
                   onChange={(e) => handleInputChange("fullName", e.target.value)}
                   className={`w-full px-4 py-3 rounded-xl border text-sm focus:outline-none transition-colors ${
@@ -344,7 +501,7 @@ export default function CheckoutPage() {
                       <Truck className="w-4 h-4 text-brand-primary" />
                     </div>
                     <span className="text-xs text-brand-primary font-bold">
-                      {subtotal >= 2000 ? "FREE Delivery" : "৳ 70 Shipping"}
+                      {subtotal >= freeThreshold ? "FREE Delivery" : `৳ ${insideFee} Shipping`}
                     </span>
                     <p className="text-[11px] text-zinc-500 mt-0.5">24 - 48 Hours Delivery</p>
                   </button>
@@ -365,7 +522,7 @@ export default function CheckoutPage() {
                       <Truck className="w-4 h-4 text-zinc-500" />
                     </div>
                     <span className="text-xs font-semibold text-brand-charcoal">
-                      ৳ 130 Flat Shipping
+                      ৳ {outsideFee} Flat Shipping
                     </span>
                     <p className="text-[11px] text-zinc-500 mt-0.5">3 - 5 Days Courier</p>
                   </button>
@@ -509,7 +666,7 @@ export default function CheckoutPage() {
                       Please send <span className="text-brand-primary font-bold">{formatPrice(grandTotal)}</span> to:
                     </p>
                     <p className="font-mono bg-white inline-block px-3 py-1.5 rounded-lg border border-brand-border text-sm font-bold text-brand-charcoal">
-                      bKash Personal: 01700-000000
+                      bKash / Nagad: {bkashNumber}
                     </p>
                     <p className="text-[11px] text-zinc-500">
                       Select <strong>Send Money</strong> or <strong>Make Payment</strong>, then enter the sender number and TrxID below for verification.
@@ -695,12 +852,101 @@ export default function CheckoutPage() {
               })}
             </div>
 
+            {/* Coupon Code Redemption Input / Applied Tag */}
+            <div className="pt-2 border-t border-brand-border/60 space-y-2">
+              <span className="text-[11px] font-semibold uppercase tracking-wider text-brand-charcoal block">
+                Have a coupon or promo code?
+              </span>
+
+              {appliedCoupon ? (
+                <div className="flex items-center justify-between p-3 rounded-2xl bg-brand-blush/60 border border-brand-primary/30 text-xs animate-in fade-in">
+                  <div className="flex items-center gap-2">
+                    <span className="p-1.5 rounded-lg bg-brand-primary text-white">
+                      <Tag className="w-3.5 h-3.5" />
+                    </span>
+                    <div>
+                      <span className="font-mono font-bold tracking-wider text-brand-primary">
+                        {appliedCoupon.code}
+                      </span>
+                      <span className="text-[10px] text-zinc-500 block">
+                        {appliedCoupon.type === "percentage"
+                          ? `${appliedCoupon.discount_value}% savings applied`
+                          : `${formatPrice(appliedCoupon.discount_value)} savings applied`}
+                      </span>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleRemoveCoupon}
+                    title="Remove coupon"
+                    className="p-1 text-zinc-400 hover:text-rose-600 rounded-lg hover:bg-white/80 transition-colors cursor-pointer"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-1.5">
+                  <div className="flex gap-2">
+                    <div className="relative flex-1">
+                      <Tag className="w-3.5 h-3.5 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                      <input
+                        type="text"
+                        placeholder="Enter coupon code (e.g. ADORN50)"
+                        value={couponInput}
+                        onChange={(e) => {
+                          setCouponInput(e.target.value.toUpperCase());
+                          if (couponError) setCouponError(null);
+                        }}
+                        className="w-full pl-8 pr-3.5 py-2.5 rounded-xl border border-brand-border bg-brand-ivory/30 text-xs font-mono uppercase focus:outline-none focus:border-brand-primary tracking-wider"
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      disabled={couponLoading || !couponInput.trim()}
+                      onClick={handleApplyCoupon}
+                      className="px-5 py-2.5 rounded-xl bg-brand-primary text-white text-xs font-semibold hover:bg-brand-primary-hover transition-colors shadow-2xs disabled:opacity-50 cursor-pointer flex items-center justify-center min-w-[70px]"
+                    >
+                      {couponLoading ? (
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      ) : (
+                        "Apply"
+                      )}
+                    </button>
+                  </div>
+                  {couponError && (
+                    <p className="text-[11px] text-rose-600 flex items-center gap-1 font-medium animate-in fade-in">
+                      <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
+                      {couponError}
+                    </p>
+                  )}
+                  {couponSuccess && (
+                    <p className="text-[11px] text-emerald-700 flex items-center gap-1 font-medium animate-in fade-in">
+                      <CheckCircle2 className="w-3.5 h-3.5 flex-shrink-0" />
+                      {couponSuccess}
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+
             {/* Calculations Breakdown */}
             <div className="space-y-3 pt-4 border-t border-brand-border/60 text-sm">
               <div className="flex justify-between text-zinc-600">
                 <span>Subtotal ({items.reduce((acc, i) => acc + i.quantity, 0)} items)</span>
                 <span className="font-medium text-brand-charcoal">{formatPrice(subtotal)}</span>
               </div>
+
+              {appliedDiscount > 0 && (
+                <div className="flex justify-between text-emerald-700 font-semibold animate-in fade-in">
+                  <span className="flex items-center gap-1.5">
+                    <Tag className="w-3.5 h-3.5 text-brand-primary" />
+                    Coupon Discount ({appliedCoupon?.code})
+                  </span>
+                  <span className="font-mono text-emerald-700 font-bold">
+                    - ৳ {appliedDiscount.toLocaleString()}
+                  </span>
+                </div>
+              )}
 
               <div className="flex justify-between text-zinc-600">
                 <span>Delivery Charge</span>

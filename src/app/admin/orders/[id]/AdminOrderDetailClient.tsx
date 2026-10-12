@@ -509,6 +509,14 @@ export function AdminOrderDetailClient({ orderId }: AdminOrderDetailClientProps)
                   {formatPrice(order.pricing.subtotal)}
                 </span>
               </div>
+              {order.pricing.discountAmount && order.pricing.discountAmount > 0 && (
+                <div className="flex justify-between text-emerald-700 font-semibold">
+                  <span className="flex items-center gap-1.5">
+                    Coupon Discount {order.pricing.couponCode ? `(${order.pricing.couponCode})` : ""}
+                  </span>
+                  <span>-{formatPrice(order.pricing.discountAmount)}</span>
+                </div>
+              )}
               <div className="flex justify-between text-zinc-600">
                 <span>Shipping Fee</span>
                 <span className="font-medium">

@@ -246,7 +246,7 @@ export function AdminLayoutShell({
                   <div className="px-4 py-3 border-b border-brand-border/60">
                     <div className="flex items-center gap-2 mb-1">
                       <p className="text-xs font-bold text-brand-charcoal">
-                        Mashfika Rahman
+                        Mashfika
                       </p>
                       <span className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded-full bg-emerald-50 text-emerald-700 text-[9px] font-bold uppercase">
                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />

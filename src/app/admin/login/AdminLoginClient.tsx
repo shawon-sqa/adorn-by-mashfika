@@ -268,7 +268,7 @@ export function AdminLoginClient() {
             <div className="pt-4 border-t border-brand-border/60 text-center">
               <p className="text-[11px] text-zinc-400 flex items-center justify-center gap-1.5 font-light">
                 <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-                Protected by encrypted Supabase authentication
+                Protected by 256-bit encrypted boutique security
               </p>
             </div>
           </div>
