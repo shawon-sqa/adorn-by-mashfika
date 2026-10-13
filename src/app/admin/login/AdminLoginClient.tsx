@@ -103,8 +103,8 @@ export function AdminLoginClient() {
       <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-[#FCEADE] rounded-full blur-3xl opacity-40 pointer-events-none translate-x-1/4 translate-y-1/4" />
 
       <div className="w-full max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-14 items-center relative z-10">
-        {/* Left Column: Brand Showcase & Value Pillars (Desktop) */}
-        <div className="lg:col-span-6 space-y-6 sm:space-y-8 py-2 sm:py-8">
+        {/* Left Column: Brand Showcase & Value Pillars (Desktop only) */}
+        <div className="hidden lg:flex lg:flex-col lg:col-span-6 space-y-6 sm:space-y-8 py-2 sm:py-8">
           <div>
             {/* Monogram & Title */}
             <div className="inline-flex items-center gap-3 mb-5 sm:mb-6">
@@ -173,8 +173,33 @@ export function AdminLoginClient() {
         </div>
 
         {/* Right Column: Floating Luxury Sign-In Card */}
-        <div className="lg:col-span-6 flex justify-center w-full">
-          <div className="w-full max-w-full sm:max-w-md bg-white rounded-3xl p-6 sm:p-10 border border-brand-border/80 shadow-xl relative backdrop-blur-xs space-y-5 sm:space-y-6">
+        <div className="w-full lg:col-span-6 flex flex-col items-center justify-center mx-auto py-8 sm:py-12">
+          {/* Dynamic Centered Header at the top of the login container on Mobile */}
+          <div className="lg:hidden flex flex-col items-center mb-6 text-center">
+            {/* Monogram & Title Row */}
+            <div className="inline-flex items-center gap-3 mb-3">
+              <div className="w-12 h-12 rounded-full bg-brand-primary text-white font-serif text-2xl font-bold flex items-center justify-center shadow-md flex-shrink-0 border-2 border-brand-champagne/40 ring-2 ring-brand-champagne/20">
+                A
+              </div>
+              <div className="text-left">
+                <h1 className="font-serif text-2xl font-bold text-brand-charcoal tracking-wide leading-tight">
+                  Adorn by Mashfika
+                </h1>
+                <p className="text-[10px] uppercase tracking-[0.25em] text-brand-primary font-semibold">
+                  Elegance in Every Detail
+                </p>
+              </div>
+            </div>
+
+            {/* Admin Badge */}
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-brand-champagne-light/70 border border-brand-champagne/40 text-brand-primary text-xs tracking-wider uppercase font-semibold shadow-2xs">
+              <Sparkles className="w-3.5 h-3.5 text-brand-champagne" />
+              ADMIN PORTAL
+            </div>
+          </div>
+
+          {/* Elevated Login Card */}
+          <div className="w-full max-w-md bg-white rounded-3xl px-4 sm:px-8 py-6 border border-brand-border/80 shadow-xl relative backdrop-blur-xs space-y-5 sm:space-y-6">
             {/* Header in card */}
             <div className="text-center space-y-2">
               <div className="w-14 h-14 rounded-2xl bg-brand-blush text-brand-primary flex items-center justify-center mx-auto shadow-inner">
@@ -271,6 +296,16 @@ export function AdminLoginClient() {
                 Protected by 256-bit encrypted boutique security
               </p>
             </div>
+          </div>
+
+          {/* Mobile Return to Storefront Link */}
+          <div className="mt-6 text-center lg:hidden">
+            <Link
+              href="/"
+              className="inline-flex items-center gap-2 text-xs font-medium text-brand-primary hover:text-brand-primary-hover hover:underline"
+            >
+              ← Return to Customer Storefront
+            </Link>
           </div>
         </div>
       </div>

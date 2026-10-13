@@ -83,6 +83,19 @@ export default function CheckoutPage() {
     }
   }, [shopperName, shopperPhone]);
 
+  // Safely sync shopper details back to cart store in an effect without updating during render
+  useEffect(() => {
+    if (
+      (formData.fullName && formData.fullName !== shopperName) ||
+      (formData.phone && formData.phone !== shopperPhone)
+    ) {
+      setShopperDetails({
+        name: formData.fullName,
+        phone: formData.phone,
+      });
+    }
+  }, [formData.fullName, formData.phone, shopperName, shopperPhone, setShopperDetails]);
+
   if (!mounted) {
     return (
       <div className="min-h-[60vh] flex items-center justify-center">
@@ -184,25 +197,14 @@ export default function CheckoutPage() {
     field: string,
     value: string
   ) => {
-    setFormData((prev) => {
-      const next = {
-        ...prev,
-        [field]: value,
-        // Auto-update default city when zone switches
-        ...(field === "deliveryZone" && {
-          city: value === "inside_dhaka" ? "Dhaka" : prev.city === "Dhaka" ? "" : prev.city,
-        }),
-      };
-
-      if (field === "fullName" || field === "phone") {
-        setShopperDetails({
-          name: field === "fullName" ? value : next.fullName,
-          phone: field === "phone" ? value : next.phone,
-        });
-      }
-
-      return next;
-    });
+    setFormData((prev) => ({
+      ...prev,
+      [field]: value,
+      // Auto-update default city when zone switches
+      ...(field === "deliveryZone" && {
+        city: value === "inside_dhaka" ? "Dhaka" : prev.city === "Dhaka" ? "" : prev.city,
+      }),
+    }));
 
     if (validationErrors[field]) {
       setValidationErrors((prev) => {
@@ -295,58 +297,56 @@ export default function CheckoutPage() {
         discountAmount: appliedDiscount > 0 ? appliedDiscount : undefined,
       });
 
+      let finalInsertedOrder: any = null;
+
+      // Base payload matching verified database schema
+      const baseOrderPayload = {
+        order_number: generatedId,
+        customer_name: formData.fullName,
+        customer_phone: formData.phone,
+        delivery_zone: formData.deliveryZone,
+        address: formData.address,
+        city: formData.city,
+        payment_method: formData.paymentMethod,
+        subtotal,
+        delivery_fee: shippingFee,
+        total: grandTotal,
+        status: "pending",
+        bkash_sender: formData.bkashSenderPhone || null,
+        bkash_trx_id: formData.bkashTrxId || null,
+        notes: finalNotes || null,
+      };
+
       const { data: insertedOrder, error: orderError } = await supabase
         .from("orders")
         .insert({
-          order_number: generatedId,
-          customer_name: formData.fullName,
-          customer_phone: formData.phone,
-          delivery_zone: formData.deliveryZone,
-          address: formData.address,
-          city: formData.city,
-          payment_method: formData.paymentMethod,
-          subtotal,
-          delivery_fee: shippingFee,
-          total: grandTotal,
+          ...baseOrderPayload,
           total_amount: grandTotal,
           discount_amount: appliedDiscount > 0 ? appliedDiscount : 0,
           coupon_code: appliedCoupon ? appliedCoupon.code : null,
-          status: "pending",
-          bkash_sender: formData.bkashSenderPhone || null,
-          bkash_trx_id: formData.bkashTrxId || null,
-          notes: finalNotes || null,
         } as any)
         .select()
         .single();
 
-      if (orderError && (orderError.message?.includes("total_amount") || orderError.message?.includes("discount_amount") || orderError.message?.includes("coupon_code"))) {
+      if (orderError) {
         // Fallback for database schema if extra columns aren't in table schema
-        await supabase
+        const { data: fallbackOrder, error: fallbackError } = await supabase
           .from("orders")
-          .insert({
-            order_number: generatedId,
-            customer_name: formData.fullName,
-            customer_phone: formData.phone,
-            delivery_zone: formData.deliveryZone,
-            address: formData.address,
-            city: formData.city,
-            payment_method: formData.paymentMethod,
-            subtotal,
-            delivery_fee: shippingFee,
-            total: grandTotal,
-            status: "pending",
-            bkash_sender: formData.bkashSenderPhone || null,
-            bkash_trx_id: formData.bkashTrxId || null,
-            notes: finalNotes || null,
-          })
+          .insert(baseOrderPayload)
           .select()
           .single();
+
+        if (!fallbackError && fallbackOrder) {
+          finalInsertedOrder = fallbackOrder;
+        }
+      } else if (insertedOrder) {
+        finalInsertedOrder = insertedOrder;
       }
 
-      if (!orderError && insertedOrder) {
+      if (finalInsertedOrder?.id) {
         // Insert order items
         const orderItemsPayload = items.map((item) => ({
-          order_id: insertedOrder.id,
+          order_id: finalInsertedOrder.id,
           product_id: item.product.id,
           product_title: item.selectedColor
             ? `${item.product.title} (Color: ${item.selectedColor})`
@@ -354,7 +354,7 @@ export default function CheckoutPage() {
           price: item.product.price,
           quantity: item.quantity,
           total: item.product.price * item.quantity,
-          image_url: item.product.images[0] || null,
+          image_url: item.product.images?.[0] || null,
         }));
 
         await supabase.from("order_items").insert(orderItemsPayload);

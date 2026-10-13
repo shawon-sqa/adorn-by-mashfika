@@ -191,8 +191,8 @@ export default function AdminProductsListPage() {
             </thead>
             <tbody className="divide-y divide-brand-border/50 text-zinc-700">
               {filteredProducts.map((p) => {
-                const isLowStock = p.stockCount <= 5;
-                const isOutOfStock = p.stockCount === 0 || !p.inStock;
+                const isOutOfStock = (p.stockCount ?? 0) <= 0 || !p.inStock;
+                const isLowStock = (p.stockCount ?? 0) < 10;
 
                 return (
                   <tr key={p.id} className="hover:bg-zinc-50/80 transition-colors">

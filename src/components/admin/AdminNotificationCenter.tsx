@@ -35,11 +35,10 @@ export function AdminNotificationCenter({
     (o) => o.orderStatus === "pending" && !clearedNoticeIds.includes(`order-${o.orderId}`)
   );
 
-  // 2. Low stock product alerts (stock <= 2)
+  // 2. Low stock product alerts (stock < 10)
   const lowStockProducts = products.filter(
     (p) =>
-      p.stockCount !== undefined &&
-      p.stockCount <= 2 &&
+      (p.stockCount ?? 0) < 10 &&
       !clearedNoticeIds.includes(`prod-${p.id}`)
   );
 
@@ -200,7 +199,9 @@ export function AdminNotificationCenter({
                         </span>
                       </div>
                       <p className="text-xs text-rose-600 font-medium mt-0.5">
-                        Critical Stock: Only {prod.stockCount ?? 0} unit(s) left!
+                        {(prod.stockCount ?? 0) <= 0
+                          ? "Out of Stock: 0 units remaining!"
+                          : `Low Stock: Only ${prod.stockCount} unit(s) left!`}
                       </p>
                       <span className="text-[10px] text-zinc-400 block mt-0.5">
                         Tap to update inventory levels in catalog

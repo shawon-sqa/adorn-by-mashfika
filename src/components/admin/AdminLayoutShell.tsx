@@ -21,6 +21,7 @@ import { createBrowserClient } from "@/lib/supabase/client";
 import { fetchSupabaseOrders } from "@/lib/data/supabaseOrders";
 import { getAdminOrders, AdminOrderRecord } from "@/lib/data/adminOrders";
 import { getAdminProducts } from "@/lib/data/adminProducts";
+import { fetchSupabaseProducts } from "@/lib/data/supabaseProducts";
 import { Product } from "@/lib/types/product";
 
 export function AdminLayoutShell({
@@ -50,7 +51,8 @@ export function AdminLayoutShell({
       // Load metrics for Notification Center
       const sbOrders = await fetchSupabaseOrders();
       setOrders(sbOrders.length > 0 ? sbOrders : getAdminOrders());
-      setProducts(getAdminProducts());
+      const sbProducts = await fetchSupabaseProducts();
+      setProducts(sbProducts.length > 0 ? sbProducts : getAdminProducts());
     }
     checkUserAndMetrics();
   }, []);
@@ -98,13 +100,23 @@ export function AdminLayoutShell({
 
   // If on /admin/login, bypass sidebar, topbar, and admin padding entirely
   if (isLoginPage) {
-    return <div className="min-h-screen w-full">{children}</div>;
+    return (
+      <div className="min-h-screen w-full" suppressHydrationWarning>
+        {children}
+      </div>
+    );
   }
 
   return (
-    <div className="min-h-screen bg-[#F8F6F4] flex flex-col md:flex-row">
+    <div
+      className="min-h-screen bg-[#F8F6F4] flex flex-col md:flex-row"
+      suppressHydrationWarning
+    >
       {/* Sidebar for Desktop */}
-      <aside className="hidden md:flex w-64 bg-[#1C1A1A] text-white flex-shrink-0 flex-col border-r border-zinc-800">
+      <aside
+        className="hidden md:flex fixed top-0 left-0 h-screen w-64 overflow-y-auto flex-shrink-0 flex-col bg-[#1C1A1A] text-white border-r border-zinc-800 z-30 print:hidden"
+        suppressHydrationWarning
+      >
         {/* Brand Header */}
         <div className="p-6 border-b border-zinc-800/80">
           <Link href="/admin" className="flex flex-col">
@@ -185,9 +197,15 @@ export function AdminLayoutShell({
       )}
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div
+        className="md:ml-64 flex-1 flex flex-col min-w-0 min-h-screen overflow-y-auto print:ml-0"
+        suppressHydrationWarning
+      >
         {/* Top Header Bar */}
-        <header className="h-16 bg-white border-b border-brand-border/80 px-4 sm:px-8 flex items-center justify-between sticky top-0 z-30 shadow-xs">
+        <header
+          className="h-16 bg-white border-b border-brand-border/80 px-4 sm:px-8 flex items-center justify-between sticky top-0 z-30 shadow-xs print:hidden"
+          suppressHydrationWarning
+        >
           <div className="flex items-center gap-3">
             {/* Mobile Hamburger Button */}
             <button
@@ -304,7 +322,10 @@ export function AdminLayoutShell({
         </header>
 
         {/* Page Container */}
-        <main className="flex-1 p-6 sm:p-8 lg:p-10 max-w-7xl w-full mx-auto">
+        <main
+          className="flex-1 p-6 sm:p-8 lg:p-10 max-w-7xl w-full mx-auto print:p-0 print:m-0 print:max-w-none print:w-full"
+          suppressHydrationWarning
+        >
           {children}
         </main>
       </div>

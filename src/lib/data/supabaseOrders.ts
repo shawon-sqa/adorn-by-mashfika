@@ -70,27 +70,100 @@ export function encodeOrderNotes(
 export async function fetchSupabaseOrders(): Promise<AdminOrderRecord[]> {
   try {
     const supabase = createBrowserClient();
-    const { data: dbOrders, error } = await supabase
+
+    // Fetch all products so we can always enrich and fallback even if PostgREST cache lacks the foreign key
+    const { data: dbProducts } = await supabase
+      .from("products")
+      .select("id, title, price, images");
+    const productMap = new Map((dbProducts || []).map((p: any) => [p.id, p]));
+
+    // Attempt select with products join as requested: *, order_items(*, products(id, title, images))
+    let dbOrders: any = null;
+    const { data: joinedOrders, error: joinError } = await supabase
       .from("orders")
-      .select("*, order_items(*)")
+      .select("*, order_items(*, products(id, title, images))")
       .order("created_at", { ascending: false });
 
-    if (error || !dbOrders) {
-      console.warn("Error fetching Supabase orders, returning fallback:", error);
-      return [];
+    if (!joinError && joinedOrders) {
+      dbOrders = joinedOrders;
+    } else {
+      // Fallback if PostgREST schema cache does not have foreign key relationship
+      const { data: plainOrders, error: plainError } = await supabase
+        .from("orders")
+        .select("*, order_items(*)")
+        .order("created_at", { ascending: false });
+
+      if (plainError || !plainOrders) {
+        console.warn("Error fetching Supabase orders, returning fallback:", plainError || joinError);
+        return [];
+      }
+      dbOrders = plainOrders;
     }
 
-    return dbOrders.map((ord: SupabaseOrder) => {
-      const items = (ord.order_items || []).map((item: SupabaseOrderItem) => ({
-        id: item.product_id || item.id,
-        title: item.product_title,
-        price: item.price,
-        quantity: item.quantity,
-        gradient: "from-[#F7E7CE] via-[#FCEADE] to-[#F3D1DC]",
-        imageUrl: item.image_url || undefined,
-      }));
+    return dbOrders.map((ord: any) => {
+      const items = (ord.order_items || []).map((item: any) => {
+        const prod = item.products || productMap.get(item.product_id);
+        const resolvedTitle =
+          item.product_name ||
+          item.product_title ||
+          prod?.title?.trim() ||
+          "Boutique Order";
+
+        const resolvedImage =
+          item.image_url ||
+          item.product_image ||
+          (prod?.images && prod.images[0]) ||
+          undefined;
+
+        // Extract selected variant/color if in title or explicitly on item
+        let selectedColor = item.variant || item.color || item.selected_color;
+        let cleanTitle = resolvedTitle;
+        const colorMatch = resolvedTitle.match(/\(Color:\s*([^)]+)\)/i);
+        if (colorMatch) {
+          if (!selectedColor) selectedColor = colorMatch[1].trim();
+          cleanTitle = resolvedTitle.replace(/\(Color:\s*[^)]+\)/i, "").trim();
+        }
+
+        return {
+          id: item.product_id || item.id,
+          title: cleanTitle,
+          price: Number(item.price ?? item.unit_price ?? prod?.price ?? 0),
+          quantity: Number(item.quantity) || 1,
+          selectedColor: selectedColor || undefined,
+          gradient: "from-[#F7E7CE] via-[#FCEADE] to-[#F3D1DC]",
+          imageUrl: resolvedImage,
+        };
+      });
 
       const { cleanNotes, logistics, couponMeta } = parseOrderNotes(ord.notes);
+
+      // If items is empty (e.g. historical orders before order_items were linked), fallback to matching products
+      let finalItems = items;
+      if (finalItems.length === 0) {
+        const matchingProd = (dbProducts || []).find((p: any) => p.price === ord.subtotal);
+        if (matchingProd) {
+          finalItems = [
+            {
+              id: matchingProd.id,
+              title: matchingProd.title.trim(),
+              price: matchingProd.price,
+              quantity: 1,
+              gradient: "from-[#F7E7CE] via-[#FCEADE] to-[#F3D1DC]",
+              imageUrl: matchingProd.images?.[0] || undefined,
+            },
+          ];
+        } else {
+          finalItems = [
+            {
+              id: "item-1",
+              title: "Boutique Order",
+              price: ord.subtotal,
+              quantity: 1,
+              gradient: "from-[#F7E7CE] via-[#FCEADE] to-[#F3D1DC]",
+            },
+          ];
+        }
+      }
 
       return {
         orderId: ord.order_number,
@@ -104,15 +177,7 @@ export async function fetchSupabaseOrders(): Promise<AdminOrderRecord[]> {
           city: ord.city,
           notes: cleanNotes,
         },
-        items: items.length > 0 ? items : [
-          {
-            id: "item-1",
-            title: "Boutique Order",
-            price: ord.subtotal,
-            quantity: 1,
-            gradient: "from-[#F7E7CE] via-[#FCEADE] to-[#F3D1DC]",
-          },
-        ],
+        items: finalItems,
         payment: {
           method: ord.payment_method,
           status: ord.payment_method === "cod" ? "cod_payable" : "pending_verification",

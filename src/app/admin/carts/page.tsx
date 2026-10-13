@@ -3,7 +3,6 @@
 import { useState, useEffect, useMemo } from "react";
 import {
   Search,
-  Settings,
   Trash2,
   MessageCircle,
   Mail,
@@ -227,15 +226,6 @@ export default function AdminCartsPage() {
           >
             <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
           </button>
-
-          <button
-            type="button"
-            onClick={() => setTemplatesModalOpen(true)}
-            className="px-4 py-2.5 rounded-xl border border-brand-border bg-white hover:bg-zinc-50 text-xs font-semibold text-brand-charcoal transition-all shadow-2xs flex items-center gap-2 cursor-pointer"
-          >
-            <Settings className="w-4 h-4 text-brand-primary" />
-            <span>⚙ Settings</span>
-          </button>
         </div>
       </div>
 
@@ -273,8 +263,18 @@ export default function AdminCartsPage() {
             })}
           </div>
 
-          {/* Archived Toggle */}
+          {/* Actions & Archived Toggle */}
           <div className="flex items-center gap-3 shrink-0">
+            <button
+              type="button"
+              onClick={() => setTemplatesModalOpen(true)}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-brand-border/70 bg-white hover:bg-zinc-50 text-xs font-medium text-zinc-700 transition-colors shadow-2xs cursor-pointer"
+              title="Configure WhatsApp & Email follow-up message templates"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-brand-primary" />
+              <span>Message Templates</span>
+            </button>
+
             <label className="flex items-center gap-2 text-xs font-medium text-zinc-600 cursor-pointer select-none">
               <input
                 type="checkbox"

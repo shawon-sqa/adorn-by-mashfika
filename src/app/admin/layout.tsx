@@ -9,7 +9,7 @@ export default function AdminLayout({
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-[#F8F6F4] flex items-center justify-center">
+        <div className="min-h-screen bg-[#F8F6F4] flex items-center justify-center" suppressHydrationWarning>
           <div className="w-8 h-8 border-4 border-brand-primary border-t-transparent rounded-full animate-spin" />
         </div>
       }
