@@ -30,6 +30,7 @@ import {
 } from "@/lib/data/cartsRecovery";
 import { FollowUpTemplatesModal } from "@/components/admin/FollowUpTemplatesModal";
 import { formatPrice } from "@/lib/utils/formatters";
+import { AdminPagination } from "@/components/admin/AdminPagination";
 
 // Relative time helper
 function formatTimeAgo(isoDate: string): string {
@@ -74,6 +75,7 @@ export default function AdminCartsPage() {
   const [templatesModalOpen, setTemplatesModalOpen] = useState(false);
   const [templatesConfig, setTemplatesConfig] = useState<FollowUpTemplatesConfig>(DEFAULT_TEMPLATES_CONFIG);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
 
   const loadData = async () => {
     setLoading(true);
@@ -122,6 +124,15 @@ export default function AdminCartsPage() {
       return true;
     });
   }, [carts, activeFilter, searchQuery, showArchived]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeFilter, searchQuery, showArchived]);
+
+  const paginatedCarts = useMemo(() => {
+    const start = (currentPage - 1) * 10;
+    return filteredCarts.slice(start, start + 10);
+  }, [filteredCarts, currentPage]);
 
   // Handle follow up via WhatsApp (Opens https://wa.me/880${cleanPhone}?text=...)
   const handleWhatsAppFollowUp = async (cart: AbandonedCartRecord) => {
@@ -335,7 +346,7 @@ export default function AdminCartsPage() {
                   </td>
                 </tr>
               ) : (
-                filteredCarts.map((cart) => {
+                paginatedCarts.map((cart) => {
                   return (
                     <tr
                       key={cart.id}
@@ -494,6 +505,14 @@ export default function AdminCartsPage() {
             </tbody>
           </table>
         </div>
+
+        {/* Boutique Pagination Component */}
+        <AdminPagination
+          currentPage={currentPage}
+          totalItems={filteredCarts.length}
+          itemsPerPage={10}
+          onPageChange={setCurrentPage}
+        />
       </div>
 
       {/* Follow-up Templates Modal */}

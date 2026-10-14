@@ -77,13 +77,13 @@ export function WishlistDrawer() {
         }`}
       >
         {/* Header */}
-        <div className="p-5 sm:p-6 border-b border-brand-border/60 flex items-center justify-between bg-brand-ivory/40">
+        <div className="p-5 sm:p-6 border-b border-[#EAE3DE] flex items-center justify-between bg-[#FAF7F5]">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-full bg-brand-blush text-brand-primary flex items-center justify-center">
-              <Heart className="w-4 h-4 fill-brand-primary" />
+            <div className="w-8 h-8 rounded-full bg-[#4A1525]/10 text-[#4A1525] border border-[#D4A373]/30 flex items-center justify-center">
+              <Heart className="w-4 h-4 fill-[#4A1525] text-[#4A1525]" />
             </div>
             <div>
-              <h3 className="font-serif text-lg text-brand-charcoal">Saved Creations</h3>
+              <h3 className="font-serif text-lg text-[#240610]">Saved Creations</h3>
               <p className="text-[11px] text-zinc-500 font-light">
                 {favoriteIds.length} {favoriteIds.length === 1 ? "item" : "items"} saved to your wishlist
               </p>
@@ -92,7 +92,7 @@ export function WishlistDrawer() {
           <button
             type="button"
             onClick={closeWishlist}
-            className="p-2 text-zinc-400 hover:text-brand-charcoal rounded-full hover:bg-zinc-100 transition-colors cursor-pointer"
+            className="p-2 text-zinc-400 hover:text-[#4A1525] rounded-full hover:bg-white transition-colors cursor-pointer"
             aria-label="Close Wishlist"
           >
             <X className="w-5 h-5" />
@@ -100,14 +100,14 @@ export function WishlistDrawer() {
         </div>
 
         {/* Content list */}
-        <div className="flex-1 overflow-y-auto p-5 sm:p-6 divide-y divide-brand-border/60">
+        <div className="flex-1 overflow-y-auto p-5 sm:p-6 divide-y divide-[#EAE3DE]">
           {favoritedProducts.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center text-center p-6 space-y-4">
-              <div className="w-16 h-16 rounded-full bg-brand-blush text-brand-primary flex items-center justify-center mx-auto">
+              <div className="w-16 h-16 rounded-full bg-[#4A1525]/10 text-[#4A1525] border border-[#D4A373]/30 flex items-center justify-center mx-auto">
                 <Heart className="w-8 h-8 opacity-50" />
               </div>
               <div>
-                <h4 className="font-serif text-lg text-brand-charcoal">Your wishlist is empty</h4>
+                <h4 className="font-serif text-lg text-[#240610]">Your wishlist is empty</h4>
                 <p className="text-xs text-zinc-500 max-w-[240px] mt-1 font-light leading-relaxed">
                   Click the heart icon on any handcrafted piece to save it for later.
                 </p>
@@ -115,7 +115,7 @@ export function WishlistDrawer() {
               <button
                 type="button"
                 onClick={closeWishlist}
-                className="mt-2 px-6 py-2.5 rounded-full bg-brand-primary text-white text-xs font-semibold hover:bg-brand-primary-hover transition-colors shadow-xs"
+                className="mt-2 px-6 py-2.5 rounded-full bg-[#4A1525] text-[#F3E5D8] text-xs font-semibold hover:bg-[#3B0E1B] transition-colors shadow-xs cursor-pointer"
               >
                 Explore Collection
               </button>
@@ -130,7 +130,7 @@ export function WishlistDrawer() {
                   <Link
                     href={`/shop/${product.slug}`}
                     onClick={closeWishlist}
-                    className="w-20 h-20 rounded-2xl border border-brand-border/60 overflow-hidden relative bg-brand-ivory flex-shrink-0 group"
+                    className="w-20 h-20 rounded-2xl border border-[#EAE3DE] overflow-hidden relative bg-[#FAF7F5] flex-shrink-0 group"
                   >
                     {product.images && product.images[0] ? (
                       <img

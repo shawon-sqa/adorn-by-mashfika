@@ -271,17 +271,17 @@ export function FirstOrderDiscountModal() {
         </button>
 
         {/* Decorative Top Banner */}
-        <div className="bg-gradient-to-r from-brand-blush via-brand-ivory to-[#F3D1DC] p-6 text-center border-b border-brand-border/60 relative">
-          <div className="w-14 h-14 rounded-2xl bg-white shadow-sm flex items-center justify-center mx-auto mb-3 text-brand-primary border border-brand-primary/20">
+        <div className="bg-gradient-to-r from-[#FAF7F5] via-[#FAF7F5] to-[#F5EBE6] p-6 text-center border-b border-[#EAE3DE] relative">
+          <div className="w-14 h-14 rounded-2xl bg-white shadow-sm flex items-center justify-center mx-auto mb-3 text-[#4A1525] border border-[#D4A373]/30">
             <Gift className="w-7 h-7" />
           </div>
 
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/90 text-brand-primary text-[10px] font-bold tracking-wider uppercase mb-1 shadow-2xs">
-            <Sparkles className="w-3 h-3 text-brand-champagne" />
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white text-[#4A1525] border border-[#D4A373]/30 text-[10px] font-bold tracking-wider uppercase mb-1 shadow-2xs">
+            <Sparkles className="w-3 h-3 text-[#D4A373]" />
             Special Welcome Gift
           </div>
 
-          <h3 className="font-serif text-2xl text-brand-charcoal mt-1 tracking-tight">
+          <h3 className="font-serif text-2xl text-[#240610] mt-1 tracking-tight">
             Get ৳50 off your first order!
           </h3>
           <p className="text-xs text-zinc-600 mt-1 max-w-xs mx-auto font-light">
@@ -351,7 +351,7 @@ export function FirstOrderDiscountModal() {
               <button
                 type="submit"
                 disabled={submitting}
-                className="w-full py-3.5 px-6 rounded-full bg-brand-primary hover:bg-brand-primary-hover text-white text-xs font-semibold uppercase tracking-wider shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
+                className="w-full py-3.5 px-6 rounded-full bg-[#4A1525] hover:bg-[#3B0E1B] text-[#F3E5D8] text-xs font-semibold uppercase tracking-wider shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
               >
                 {submitting ? (
                   <>
@@ -377,7 +377,7 @@ export function FirstOrderDiscountModal() {
               </div>
 
               <div>
-                <h4 className="font-serif text-lg text-brand-charcoal">
+                <h4 className="font-serif text-lg text-[#240610]">
                   Coupon Unlocked!
                 </h4>
                 <p className="text-xs text-zinc-500 mt-1">
@@ -385,17 +385,17 @@ export function FirstOrderDiscountModal() {
                 </p>
               </div>
 
-              <div className="p-3 bg-brand-blush/60 rounded-2xl border border-brand-primary/30 flex items-center justify-between">
+              <div className="p-3 bg-[#FAF7F5] rounded-2xl border border-[#D4A373]/30 flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Tag className="w-4 h-4 text-brand-primary" />
-                  <span className="font-mono font-bold text-sm tracking-wider text-brand-charcoal">
+                  <Tag className="w-4 h-4 text-[#4A1525]" />
+                  <span className="font-mono font-bold text-sm tracking-wider text-[#240610]">
                     {generatedCode || "WELCOME50"}
                   </span>
                 </div>
                 <button
                   type="button"
                   onClick={handleCopy}
-                  className="px-3 py-1.5 rounded-xl bg-white border border-brand-border text-xs font-medium text-brand-charcoal hover:text-brand-primary transition-colors flex items-center gap-1 cursor-pointer"
+                  className="px-3 py-1.5 rounded-xl bg-white border border-[#EAE3DE] text-xs font-medium text-[#240610] hover:text-[#4A1525] transition-colors flex items-center gap-1 cursor-pointer"
                 >
                   {copied ? (
                     <>
@@ -414,7 +414,7 @@ export function FirstOrderDiscountModal() {
               <button
                 type="button"
                 onClick={handleClose}
-                className="w-full py-3 rounded-full bg-brand-primary text-white text-xs font-semibold uppercase tracking-wider hover:bg-brand-primary-hover transition-colors shadow-sm cursor-pointer"
+                className="w-full py-3 rounded-full bg-[#4A1525] hover:bg-[#3B0E1B] text-[#F3E5D8] text-xs font-semibold uppercase tracking-wider transition-colors shadow-sm cursor-pointer"
               >
                 Shop Now with ৳50 Off
               </button>

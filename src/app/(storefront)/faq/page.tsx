@@ -69,11 +69,11 @@ const FAQS: FAQItem[] = [
       <div className="space-y-3 text-zinc-600 leading-relaxed text-xs sm:text-sm">
         <p>We partner with premier express courier services to ensure prompt and pristine door-to-door delivery across all 64 districts of Bangladesh:</p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-          <div className="p-3.5 rounded-2xl bg-brand-blush/40 border border-brand-primary/20">
-            <span className="text-xs font-bold uppercase tracking-wider text-brand-primary block mb-1">
+          <div className="p-3.5 rounded-2xl bg-[#FAF7F5] border border-[#EAE3DE]">
+            <span className="text-xs font-bold uppercase tracking-wider text-[#4A1525] block mb-1">
               Inside Dhaka Metro
             </span>
-            <p className="font-medium text-brand-charcoal text-sm">
+            <p className="font-medium text-[#240610] text-sm">
               24 to 48 Hours Delivery
             </p>
             <p className="text-xs text-zinc-600 mt-1">
@@ -84,11 +84,11 @@ const FAQS: FAQItem[] = [
             </p>
           </div>
 
-          <div className="p-3.5 rounded-2xl bg-brand-ivory border border-brand-border/80">
-            <span className="text-xs font-bold uppercase tracking-wider text-brand-charcoal block mb-1">
+          <div className="p-3.5 rounded-2xl bg-white border border-[#EAE3DE]">
+            <span className="text-xs font-bold uppercase tracking-wider text-[#240610] block mb-1">
               Outside Dhaka (All BD)
             </span>
-            <p className="font-medium text-brand-charcoal text-sm">
+            <p className="font-medium text-[#240610] text-sm">
               3 to 5 Business Days
             </p>
             <p className="text-xs text-zinc-600 mt-1">
@@ -115,7 +115,7 @@ const FAQS: FAQItem[] = [
           </li>
           <li>
             Send the exact grand total shown at checkout to our official boutique number:
-            <span className="block mt-1 font-mono font-bold text-brand-primary text-xs sm:text-sm bg-brand-blush/60 px-3 py-1.5 rounded-lg w-fit border border-brand-primary/20">
+            <span className="block mt-1 font-mono font-bold text-[#4A1525] text-xs sm:text-sm bg-[#FAF7F5] px-3 py-1.5 rounded-lg w-fit border border-[#D4A373]/30">
               {bkashNumber}
             </span>
           </li>
@@ -229,15 +229,15 @@ export default function FAQPage() {
   );
 
   return (
-    <div className="min-h-screen bg-[#FCFAF8] py-12 sm:py-16 lg:py-20">
+    <div className="min-h-screen bg-[#FAF7F5] py-12 sm:py-16 lg:py-20">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
         {/* Minimalist Luxury Header */}
         <div className="text-center space-y-3">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-brand-blush/60 text-brand-primary text-[10px] font-bold tracking-widest uppercase border border-brand-primary/20">
-            <Sparkles className="w-3 h-3 text-brand-champagne" />
-            Help & Boutique Guidance
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#D4A373]/10 text-[#4A1525] text-xs font-serif font-medium tracking-[0.2em] uppercase border border-[#D4A373]/30 shadow-2xs">
+            <Sparkles className="w-3.5 h-3.5 text-[#D4A373]" />
+            ✦ HELP & BOUTIQUE GUIDANCE
           </div>
-          <h1 className="font-serif text-3xl sm:text-4xl lg:text-5xl text-brand-charcoal tracking-tight uppercase">
+          <h1 className="font-serif text-3xl sm:text-4xl lg:text-5xl text-[#240610] tracking-tight uppercase">
             Frequently Asked Questions
           </h1>
           <p className="text-xs sm:text-sm text-zinc-500 max-w-lg mx-auto font-light leading-relaxed">
@@ -252,9 +252,9 @@ export default function FAQPage() {
                 placeholder="Search delivery, payments, returns..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-11 pr-4 py-3 rounded-2xl border border-brand-border/80 bg-white shadow-2xs text-xs sm:text-sm focus:outline-none focus:border-brand-primary transition-colors text-brand-charcoal"
+                className="w-full pl-12 pr-6 py-3.5 rounded-full border border-[#EAE3DE] bg-white shadow-xs text-xs sm:text-sm focus:border-[#4A1525] focus:ring-2 focus:ring-[#D4A373]/20 outline-none transition-all text-[#240610]"
               />
-              <Search className="w-4 h-4 text-zinc-400 absolute left-4 top-1/2 -translate-y-1/2" />
+              <Search className="w-4 h-4 text-zinc-400 absolute left-4.5 top-1/2 -translate-y-1/2" />
             </div>
           </div>
         </div>
@@ -262,9 +262,9 @@ export default function FAQPage() {
         {/* Accordion Questions List */}
         <div className="space-y-4">
           {filteredFaqs.length === 0 ? (
-            <div className="text-center py-12 bg-white rounded-3xl border border-brand-border/60 p-8 space-y-3">
+            <div className="text-center py-12 bg-white rounded-3xl border border-[#EAE3DE] p-8 space-y-3">
               <HelpCircle className="w-8 h-8 text-zinc-300 mx-auto" />
-              <p className="text-sm font-serif text-brand-charcoal">No questions matched your search</p>
+              <p className="text-sm font-serif text-[#240610]">No questions matched your search</p>
               <p className="text-xs text-zinc-400">
                 Try searching for keywords like "delivery", "bKash", or "exchange".
               </p>
@@ -276,10 +276,10 @@ export default function FAQPage() {
               return (
                 <div
                   key={item.id}
-                  className={`bg-white rounded-3xl border transition-all duration-300 overflow-hidden ${
+                  className={`bg-white rounded-2xl border transition-all duration-300 overflow-hidden ${
                     isOpen
-                      ? "border-brand-primary/40 shadow-sm ring-1 ring-brand-primary/10"
-                      : "border-brand-border/70 hover:border-brand-border hover:shadow-2xs"
+                      ? "border-[#EAE3DE] border-l-4 border-l-[#4A1525] shadow-md shadow-[#4A1525]/5"
+                      : "border-[#EAE3DE] hover:border-[#D4A373]/50 hover:shadow-xs"
                   }`}
                 >
                   <button
@@ -289,22 +289,24 @@ export default function FAQPage() {
                     aria-expanded={isOpen}
                   >
                     <div className="flex items-center gap-3.5 sm:gap-4 min-w-0">
-                      <span className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-brand-blush/60 text-brand-primary text-xs font-bold flex items-center justify-center shrink-0 border border-brand-primary/20">
+                      <span className="w-8 h-8 rounded-full bg-[#4A1525]/8 text-[#4A1525] font-semibold font-serif text-xs flex items-center justify-center shrink-0 border border-[#D4A373]/30">
                         {idx + 1}
                       </span>
                       <div>
-                        <span className="text-[10px] uppercase font-bold tracking-wider text-brand-primary/80 block mb-0.5">
+                        <span className="text-[#9A7079] text-[11px] font-semibold tracking-widest uppercase block mb-0.5">
                           {item.category}
                         </span>
-                        <h3 className="font-serif text-base sm:text-lg text-brand-charcoal leading-snug">
+                        <h3 className="font-serif text-base sm:text-lg text-[#240610] leading-snug">
                           {item.question}
                         </h3>
                       </div>
                     </div>
 
                     <div
-                      className={`w-8 h-8 rounded-full border border-brand-border/70 flex items-center justify-center shrink-0 text-zinc-400 transition-transform duration-300 ${
-                        isOpen ? "rotate-180 bg-brand-primary text-white border-brand-primary" : "bg-zinc-50"
+                      className={`w-8 h-8 rounded-full border flex items-center justify-center shrink-0 transition-transform duration-300 ${
+                        isOpen
+                          ? "rotate-180 bg-[#4A1525] text-white border-[#4A1525]"
+                          : "bg-[#FAF7F5] text-zinc-400 border-[#EAE3DE]"
                       }`}
                     >
                       <ChevronDown className="w-4 h-4" />
@@ -312,8 +314,8 @@ export default function FAQPage() {
                   </button>
 
                   {isOpen && (
-                    <div className="px-5 pb-6 sm:px-6 sm:pb-6 pt-1 border-t border-brand-border/40 animate-in fade-in slide-in-from-top-1 duration-200">
-                      <div className="pl-10 sm:pl-12">
+                    <div className="px-5 pb-6 sm:px-6 sm:pb-6 pt-1 border-t border-[#F0EAE5] animate-in fade-in slide-in-from-top-1 duration-200">
+                      <div className="pl-11 sm:pl-12">
                         {item.answer({
                           insideFee,
                           outsideFee,
@@ -332,12 +334,12 @@ export default function FAQPage() {
         </div>
 
         {/* Still Need Help Concierge Card */}
-        <div className="bg-gradient-to-r from-brand-blush/80 via-brand-ivory to-white rounded-3xl p-6 sm:p-8 border border-brand-primary/20 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-6 text-center sm:text-left">
+        <div className="bg-white rounded-3xl p-6 sm:p-8 border border-[#EAE3DE] shadow-sm flex flex-col sm:flex-row items-center justify-between gap-6 text-center sm:text-left">
           <div className="space-y-1.5 max-w-md">
-            <h4 className="font-serif text-lg sm:text-xl text-brand-charcoal font-medium">
+            <h4 className="font-serif text-lg sm:text-xl text-[#240610] font-medium">
               Still have questions or need personalized styling advice?
             </h4>
-            <p className="text-xs text-zinc-600 leading-relaxed">
+            <p className="text-xs text-zinc-600 leading-relaxed font-light">
               Our boutique concierge is active daily from 10:00 AM to 11:00 PM for custom bridal styling, live order tracking, and gift wrapping requests.
             </p>
           </div>
@@ -347,17 +349,17 @@ export default function FAQPage() {
               href={`https://wa.me/${waNumber}?text=Hello%20Adorn%20by%20Mashfika,%20I%20have%20a%20question%20regarding%20your%20collection.`}
               target="_blank"
               rel="noreferrer"
-              className="px-5 py-3 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold shadow-sm transition-all flex items-center gap-2 cursor-pointer"
+              className="px-6 py-3.5 rounded-full bg-[#075E54] hover:bg-[#128C7E] text-white text-xs font-semibold shadow-sm transition-all flex items-center gap-2 cursor-pointer"
             >
               <MessageCircle className="w-4 h-4" />
               WhatsApp Concierge
             </a>
             <Link
               href="/shop"
-              className="px-5 py-3 rounded-full bg-white hover:bg-brand-ivory text-brand-charcoal border border-brand-border text-xs font-semibold shadow-2xs transition-all flex items-center gap-1.5"
+              className="px-6 py-3.5 rounded-full bg-[#4A1525] hover:bg-[#3B0E1B] text-[#F3E5D8] text-xs font-semibold shadow-md shadow-[#4A1525]/20 transition-all flex items-center gap-1.5 cursor-pointer"
             >
               Explore Collection
-              <ArrowRight className="w-3.5 h-3.5" />
+              <ArrowRight className="w-3.5 h-3.5 text-[#D4A373]" />
             </Link>
           </div>
         </div>

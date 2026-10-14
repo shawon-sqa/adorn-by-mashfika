@@ -122,58 +122,73 @@ export function CartDrawer() {
         aria-label="Shopping Cart Drawer"
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-5 border-b border-brand-border">
+        <div className="flex items-center justify-between p-5 border-b border-[#EAE3DE]">
           <div className="flex items-center gap-2">
-            <ShoppingBag className="w-5 h-5 text-brand-primary" />
-            <h2 className="font-serif text-lg tracking-wide text-brand-charcoal">
+            <ShoppingBag className="w-5 h-5 text-[#4A1525]" />
+            <h2 className="font-serif text-lg tracking-wide text-[#240610]">
               Your Shopping Bag
             </h2>
-            <span className="text-xs bg-brand-blush text-brand-primary font-semibold px-2 py-0.5 rounded-full">
+            <span className="text-xs bg-[#4A1525]/10 text-[#4A1525] border border-[#D4A373]/30 font-semibold px-2 py-0.5 rounded-full">
               {totalCount}
             </span>
           </div>
           <button
             onClick={closeCart}
-            className="p-1.5 text-zinc-400 hover:text-brand-charcoal rounded-full hover:bg-zinc-100 transition-colors"
+            className="p-1.5 text-zinc-400 hover:text-[#4A1525] rounded-full hover:bg-[#FAF7F5] transition-colors cursor-pointer"
             aria-label="Close cart"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Free Delivery Bar */}
+        {/* Free Delivery Bar: Warm champagne accent background with luxury typography & progress bar */}
         {(() => {
           const threshold = Number(storeSettings.freeDeliveryThreshold) || 2000;
+          const progressPercent = Math.min(100, Math.round((subtotal / threshold) * 100));
           return (
-            <div className="bg-brand-blush-subtle px-5 py-2.5 border-b border-brand-border/40 text-xs">
+            <div className="bg-[#FAF7F5] px-5 py-3 border-b border-[#EAE3DE] text-xs">
               {subtotal >= threshold ? (
-                <p className="text-emerald-700 font-medium text-center">
-                  🎉 Congratulations! You have unlocked <strong>Free Delivery</strong> in Dhaka!
-                </p>
+                <div className="space-y-1.5">
+                  <p className="text-emerald-800 font-medium text-center font-serif flex items-center justify-center gap-1.5">
+                    <span className="text-[#D4A373]">✦</span>
+                    <span>Congratulations! You unlocked <strong className="text-emerald-950 font-semibold">Free Delivery</strong> across Dhaka!</span>
+                  </p>
+                  <div className="w-full bg-[#EAE3DE] h-1.5 rounded-full overflow-hidden">
+                    <div className="bg-[#D4A373] h-full rounded-full w-full transition-all duration-500" />
+                  </div>
+                </div>
               ) : (
-                <p className="text-brand-muted text-center">
-                  Add <strong>{formatPrice(threshold - subtotal)}</strong> more for{" "}
-                  <span className="text-brand-primary font-semibold">Free Delivery</span> in Dhaka.
-                </p>
+                <div className="space-y-1.5">
+                  <p className="text-[#554348] text-center font-sans font-light">
+                    Add <strong className="text-[#4A1525] font-semibold">{formatPrice(threshold - subtotal)}</strong> more for{" "}
+                    <span className="text-[#4A1525] font-medium">Free Delivery</span> in Dhaka.
+                  </p>
+                  <div className="w-full bg-[#EAE3DE] h-1.5 rounded-full overflow-hidden">
+                    <div
+                      className="bg-[#D4A373] h-full rounded-full transition-all duration-500"
+                      style={{ width: `${progressPercent}%` }}
+                    />
+                  </div>
+                </div>
               )}
             </div>
           );
         })()}
 
         {/* Cart Item List */}
-        <div className="flex-1 overflow-y-auto p-5 space-y-4 divide-y divide-brand-border/60">
+        <div className="flex-1 overflow-y-auto p-5 space-y-4 divide-y divide-[#F0EAE5]">
           {items.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center text-center py-12 text-zinc-500">
-              <div className="w-16 h-16 rounded-full bg-brand-blush flex items-center justify-center text-brand-primary mb-4">
-                <ShoppingBag className="w-8 h-8 opacity-60" />
+              <div className="w-16 h-16 rounded-full bg-[#4A1525]/10 border border-[#D4A373]/30 flex items-center justify-center text-[#4A1525] mb-4">
+                <ShoppingBag className="w-8 h-8 opacity-70" />
               </div>
-              <p className="font-serif text-lg text-brand-charcoal">Your bag is empty</p>
+              <p className="font-serif text-lg text-[#240610]">Your bag is empty</p>
               <p className="text-xs text-zinc-400 max-w-xs mt-1">
                 Explore our handcrafted jewelry & boutique collection to find your statement piece.
               </p>
               <button
                 onClick={closeCart}
-                className="mt-6 px-6 py-2.5 bg-brand-primary text-white text-xs font-semibold tracking-wider uppercase rounded-full hover:bg-brand-primary-hover transition-colors shadow-sm"
+                className="mt-6 px-6 py-2.5 bg-[#4A1525] text-[#F3E5D8] text-xs font-semibold tracking-wider uppercase rounded-full hover:bg-[#3B0E1B] transition-colors shadow-sm cursor-pointer"
               >
                 Start Shopping
               </button>
@@ -182,7 +197,7 @@ export function CartDrawer() {
             items.map((item, idx) => (
               <div key={`${item.product.id}-${item.selectedColor}-${idx}`} className="pt-4 first:pt-0 flex gap-4">
                 {/* Visual Thumbnail */}
-                <div className="w-20 h-20 rounded-xl border border-brand-border/60 flex-shrink-0 overflow-hidden relative bg-brand-ivory flex items-center justify-center">
+                <div className="w-20 h-20 rounded-xl border border-[#F0EAE5] flex-shrink-0 overflow-hidden relative bg-[#FAF7F5] flex items-center justify-center">
                   {item.product.images && item.product.images[0] ? (
                     <img
                       src={item.product.images[0]}
@@ -204,12 +219,12 @@ export function CartDrawer() {
                 <div className="flex-1 flex flex-col justify-between">
                   <div className="flex items-start justify-between gap-2">
                     <div>
-                      <h4 className="font-serif text-sm text-brand-charcoal leading-snug line-clamp-1">
+                      <h4 className="font-serif text-sm text-[#240610] leading-snug line-clamp-1">
                         {item.product.title}
                       </h4>
                       {item.selectedColor && (
                         <div className="mt-1">
-                          <span className="inline-flex items-center text-[10px] font-medium bg-brand-blush text-brand-primary px-2 py-0.5 rounded-full border border-brand-primary/20">
+                          <span className="inline-flex items-center text-[10px] font-medium bg-[#FAF7F5] text-[#4A1525] px-2 py-0.5 rounded-full border border-[#E7DFD8]">
                             Color: {item.selectedColor}
                           </span>
                         </div>
@@ -217,7 +232,7 @@ export function CartDrawer() {
                     </div>
                     <button
                       onClick={() => removeItem(item.product.id, item.selectedColor)}
-                      className="text-zinc-400 hover:text-red-500 transition-colors p-1"
+                      className="text-zinc-400 hover:text-red-500 transition-colors p-1 cursor-pointer"
                       aria-label="Remove item"
                     >
                       <Trash2 className="w-4 h-4" />
@@ -225,29 +240,29 @@ export function CartDrawer() {
                   </div>
 
                   <div className="flex items-center justify-between mt-3">
-                    <span className="font-semibold text-brand-charcoal text-sm">
+                    <span className="font-semibold text-[#240610] text-sm">
                       {formatPrice(item.product.price * item.quantity)}
                     </span>
 
                     {/* Quantity Selector */}
-                    <div className="flex items-center border border-brand-border rounded-full bg-white">
+                    <div className="flex items-center border border-[#E7DFD8] rounded-full bg-white">
                       <button
                         onClick={() =>
                           updateQuantity(item.product.id, item.quantity - 1, item.selectedColor)
                         }
-                        className="p-1 hover:text-brand-primary rounded-l-full transition-colors"
+                        className="p-1 hover:text-[#4A1525] rounded-l-full transition-colors cursor-pointer"
                         aria-label="Decrease quantity"
                       >
                         <Minus className="w-3.5 h-3.5" />
                       </button>
-                      <span className="px-2.5 text-xs font-semibold text-brand-charcoal min-w-[24px] text-center">
+                      <span className="px-2.5 text-xs font-semibold text-[#240610] min-w-[24px] text-center">
                         {item.quantity}
                       </span>
                       <button
                         onClick={() =>
                           updateQuantity(item.product.id, item.quantity + 1, item.selectedColor)
                         }
-                        className="p-1 hover:text-brand-primary rounded-r-full transition-colors"
+                        className="p-1 hover:text-[#4A1525] rounded-r-full transition-colors cursor-pointer"
                         aria-label="Increase quantity"
                       >
                         <Plus className="w-3.5 h-3.5" />
@@ -262,17 +277,17 @@ export function CartDrawer() {
 
         {/* Footer actions */}
         {items.length > 0 && (
-          <div className="p-5 border-t border-brand-border bg-brand-ivory/50 space-y-3.5">
+          <div className="p-5 border-t border-[#EAE3DE] bg-[#FAF7F5] space-y-3.5">
             {/* Coupon Code Redemption Section */}
             <div className="space-y-2">
               {appliedCoupon ? (
-                <div className="flex items-center justify-between p-2.5 rounded-xl bg-brand-blush/60 border border-brand-primary/30 text-xs animate-in fade-in">
+                <div className="flex items-center justify-between p-2.5 rounded-xl bg-white border border-[#D4A373]/30 text-xs animate-in fade-in">
                   <div className="flex items-center gap-2">
-                    <span className="p-1 rounded-md bg-brand-primary text-white">
+                    <span className="p-1 rounded-md bg-[#4A1525] text-[#D4A373]">
                       <Tag className="w-3 h-3" />
                     </span>
                     <div>
-                      <span className="font-mono font-bold tracking-wider text-brand-primary">
+                      <span className="font-mono font-bold tracking-wider text-[#4A1525]">
                         {appliedCoupon.code}
                       </span>
                       <span className="text-[10px] text-zinc-500 block">
@@ -286,7 +301,7 @@ export function CartDrawer() {
                     type="button"
                     onClick={handleRemoveCoupon}
                     title="Remove coupon"
-                    className="p-1 text-zinc-400 hover:text-rose-600 rounded-lg hover:bg-white/80 transition-colors cursor-pointer"
+                    className="p-1 text-zinc-400 hover:text-rose-600 rounded-lg hover:bg-zinc-100 transition-colors cursor-pointer"
                   >
                     <X className="w-3.5 h-3.5" />
                   </button>
@@ -304,13 +319,13 @@ export function CartDrawer() {
                           setCouponInput(e.target.value.toUpperCase());
                           if (couponError) setCouponError(null);
                         }}
-                        className="w-full pl-8 pr-3 py-2 rounded-xl border border-brand-border bg-white text-xs font-mono uppercase focus:outline-none focus:border-brand-primary tracking-wider"
+                        className="w-full pl-8 pr-3 py-2 rounded-xl border border-[#E7DFD8] bg-white text-xs font-mono uppercase focus:outline-none focus:border-[#4A1525] tracking-wider"
                       />
                     </div>
                     <button
                       type="submit"
                       disabled={couponLoading || !couponInput.trim()}
-                      className="px-4 py-2 rounded-xl bg-brand-primary text-white text-xs font-semibold hover:bg-brand-primary-hover transition-colors shadow-2xs disabled:opacity-50 cursor-pointer flex items-center justify-center min-w-[64px]"
+                      className="px-4 py-2 rounded-xl bg-[#4A1525] hover:bg-[#3B0E1B] text-[#F3E5D8] text-xs font-semibold transition-colors shadow-sm disabled:opacity-50 cursor-pointer flex items-center justify-center min-w-[64px]"
                     >
                       {couponLoading ? (
                         <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -339,7 +354,7 @@ export function CartDrawer() {
             <div className="space-y-1.5 pt-1">
               <div className="flex items-center justify-between text-xs text-zinc-600">
                 <span>Subtotal</span>
-                <span className="font-medium text-brand-charcoal">
+                <span className="font-medium text-[#240610]">
                   {formatPrice(subtotal)}
                 </span>
               </div>
@@ -354,30 +369,30 @@ export function CartDrawer() {
                 </div>
               )}
 
-              <div className="flex items-center justify-between text-sm pt-2 border-t border-brand-border/60">
-                <span className="font-semibold text-brand-charcoal">Total Amount</span>
-                <span className="font-bold text-base text-brand-primary">
+              <div className="flex items-center justify-between text-sm pt-2 border-t border-[#EAE3DE]">
+                <span className="font-serif font-semibold text-[#240610]">Total Amount</span>
+                <span className="font-bold text-base text-[#4A1525] font-serif">
                   {formatPrice(finalTotal)}
                 </span>
               </div>
             </div>
 
-            <p className="text-[11px] text-zinc-500">
+            <p className="text-[11px] text-zinc-500 font-light">
               Taxes & standard delivery calculated at checkout (Inside Dhaka: ৳80 | Outside: ৳150).
             </p>
 
             <Link
               href="/checkout"
               onClick={closeCart}
-              className="w-full flex items-center justify-center gap-2 py-3.5 px-6 rounded-full bg-brand-primary text-white font-medium text-sm hover:bg-brand-primary-hover transition-all shadow-md hover:shadow-lg cursor-pointer"
+              className="w-full flex items-center justify-center gap-2 py-4 px-6 rounded-xl bg-[#4A1525] hover:bg-[#3B0E1B] text-[#F3E5D8] font-semibold text-sm transition-all shadow-lg shadow-[#4A1525]/20 hover:shadow-xl hover:shadow-[#4A1525]/30 cursor-pointer active:scale-[0.99]"
             >
-              Proceed to Checkout
-              <ArrowRight className="w-4 h-4" />
+              <span>Proceed to Checkout</span>
+              <ArrowRight className="w-4 h-4 text-[#D4A373]" />
             </Link>
 
             <button
               onClick={closeCart}
-              className="w-full py-1.5 text-xs text-brand-muted hover:text-brand-charcoal tracking-wide transition-colors uppercase font-medium cursor-pointer"
+              className="w-full py-1.5 text-xs text-[#554348] hover:text-[#4A1525] tracking-wider transition-colors uppercase font-medium cursor-pointer"
             >
               Continue Shopping
             </button>

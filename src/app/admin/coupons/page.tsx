@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import {
   Tag,
   Plus,
@@ -21,11 +21,13 @@ import {
 } from "@/lib/data/supabaseCoupons";
 import { formatPrice } from "@/lib/utils/formatters";
 import { NewCouponModal } from "./NewCouponModal";
+import { AdminPagination } from "@/components/admin/AdminPagination";
 
 export default function AdminCouponsPage() {
   const [coupons, setCoupons] = useState<SupabaseCoupon[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [couponToEdit, setCouponToEdit] = useState<SupabaseCoupon | null>(null);
   const [couponToDelete, setCouponToDelete] = useState<SupabaseCoupon | null>(
@@ -105,6 +107,15 @@ export default function AdminCouponsPage() {
       (c.description && c.description.toLowerCase().includes(q))
     );
   });
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery]);
+
+  const paginatedCoupons = useMemo(() => {
+    const start = (currentPage - 1) * 10;
+    return filteredCoupons.slice(start, start + 10);
+  }, [filteredCoupons, currentPage]);
 
   return (
     <div className="space-y-6">
@@ -215,7 +226,7 @@ export default function AdminCouponsPage() {
                   </td>
                 </tr>
               ) : (
-                filteredCoupons.map((c) => {
+                paginatedCoupons.map((c) => {
                   const isPercentage = c.type === "percentage";
                   const discountFormatted = isPercentage
                     ? `${c.discount_value}% off`
@@ -356,6 +367,14 @@ export default function AdminCouponsPage() {
             </tbody>
           </table>
         </div>
+
+        {/* Boutique Pagination Component */}
+        <AdminPagination
+          currentPage={currentPage}
+          totalItems={filteredCoupons.length}
+          itemsPerPage={10}
+          onPageChange={setCurrentPage}
+        />
       </div>
 
       {/* New / Edit Coupon Drawer / Modal */}

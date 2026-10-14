@@ -50,7 +50,7 @@ export function StarRating({
                   className="absolute inset-0 overflow-hidden"
                   style={{ width: `${fillPercentage}%` }}
                 >
-                  <Star className={`${starSize} text-[#D4AF37] fill-[#D4AF37] stroke-none`} />
+                  <Star className={`${starSize} text-[#D4A373] fill-[#D4A373] stroke-none`} />
                 </div>
               )}
             </div>

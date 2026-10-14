@@ -146,13 +146,17 @@ export default function AdminDashboardPage() {
           </p>
         </div>
 
-        {/* Total Orders */}
-        <div className="bg-white p-5 sm:p-6 rounded-2xl border border-brand-border/80 shadow-2xs">
+        {/* Total Orders - Interactive Metric Card */}
+        <Link
+          href="/admin/orders"
+          className="bg-white p-5 sm:p-6 rounded-2xl border border-brand-border/80 shadow-2xs hover:border-[#4A1525]/40 hover:shadow-md transition-all cursor-pointer group block"
+          title="View All Orders"
+        >
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-zinc-500 uppercase tracking-wider">
+            <span className="text-xs font-medium text-zinc-500 uppercase tracking-wider group-hover:text-brand-primary transition-colors">
               Total Orders
             </span>
-            <div className="w-9 h-9 rounded-full bg-brand-blush text-brand-primary flex items-center justify-center">
+            <div className="w-9 h-9 rounded-full bg-brand-blush text-brand-primary flex items-center justify-center group-hover:scale-110 transition-transform">
               <ShoppingBag className="w-4 h-4" />
             </div>
           </div>
@@ -161,16 +165,20 @@ export default function AdminDashboardPage() {
               {orders.length}
             </span>
           </div>
-          <p className="text-[11px] text-zinc-400 mt-1">Across all zones</p>
-        </div>
+          <p className="text-[11px] text-zinc-400 mt-1">Across all zones • Click to view</p>
+        </Link>
 
-        {/* Pending Orders */}
-        <div className="bg-white p-5 sm:p-6 rounded-2xl border border-brand-border/80 shadow-2xs">
+        {/* Pending Orders - Interactive Metric Card */}
+        <Link
+          href="/admin/orders?status=pending"
+          className="bg-white p-5 sm:p-6 rounded-2xl border border-brand-border/80 shadow-2xs hover:border-amber-400 hover:shadow-md transition-all cursor-pointer group block"
+          title="View Pending Orders"
+        >
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-zinc-500 uppercase tracking-wider">
+            <span className="text-xs font-medium text-zinc-500 uppercase tracking-wider group-hover:text-amber-700 transition-colors">
               Pending Verification
             </span>
-            <div className="w-9 h-9 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center">
+            <div className="w-9 h-9 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center group-hover:scale-110 transition-transform">
               <Clock className="w-4 h-4" />
             </div>
           </div>
@@ -180,9 +188,9 @@ export default function AdminDashboardPage() {
             </span>
           </div>
           <p className="text-[11px] text-amber-600 mt-1 font-medium">
-            Requires staff dispatch
+            Requires staff dispatch • Click to filter
           </p>
-        </div>
+        </Link>
 
         {/* Low Stock Warning */}
         <div

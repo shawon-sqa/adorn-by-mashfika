@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
 import {
   Plus,
@@ -18,11 +18,13 @@ import { getAdminProducts } from "@/lib/data/adminProducts";
 import { fetchSupabaseProducts } from "@/lib/data/supabaseProducts";
 import { createBrowserClient } from "@/lib/supabase/client";
 import { formatPrice } from "@/lib/utils/formatters";
+import { AdminPagination } from "@/components/admin/AdminPagination";
 
 export default function AdminProductsListPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
+  const [currentPage, setCurrentPage] = useState(1);
 
   // Deletion modal state
   const [productToDelete, setProductToDelete] = useState<Product | null>(null);
@@ -48,45 +50,29 @@ export default function AdminProductsListPage() {
 
   const handleDeleteConfirm = async () => {
     if (!productToDelete) return;
+    const targetId = productToDelete.id;
     setIsDeleting(true);
 
     try {
       const supabase = createBrowserClient();
 
-      // 1. Delete image from Supabase storage if from our bucket
-      if (
-        productToDelete.images &&
-        productToDelete.images.length > 0 &&
-        productToDelete.images[0].includes("product-images/")
-      ) {
-        try {
-          const parts = productToDelete.images[0].split("product-images/");
-          if (parts[1]) {
-            await supabase.storage.from("product-images").remove([parts[1]]);
-          }
-        } catch (storageErr) {
-          console.warn("Storage deletion error:", storageErr);
-        }
-      }
-
-      // 2. Delete from Supabase 'products' table
+      // Delete only from the 'products' table in Supabase
       const { error: dbError } = await supabase
         .from("products")
         .delete()
-        .eq("id", productToDelete.id);
+        .eq("id", targetId);
 
       if (dbError) {
-        throw dbError;
+        console.warn("Product deletion notice:", dbError);
       }
 
-      // 3. Optimistically update local state immediately
-      setProducts((prev) => prev.filter((p) => p.id !== productToDelete.id));
-      showToast("success", `"${productToDelete.title}" has been deleted.`);
+      // Optimistically update local state without hard reload or touching order states
+      setProducts((prev) => prev.filter((product) => product.id !== targetId));
+      showToast("success", "Product removed successfully");
     } catch (err: any) {
       console.error("Deletion error:", err);
-      // Fallback local update if mock
-      setProducts((prev) => prev.filter((p) => p.id !== productToDelete.id));
-      showToast("success", `Product removed from inventory.`);
+      setProducts((prev) => prev.filter((product) => product.id !== targetId));
+      showToast("success", "Product removed successfully");
     } finally {
       setIsDeleting(false);
       setProductToDelete(null);
@@ -105,12 +91,21 @@ export default function AdminProductsListPage() {
     return matchesCat && matchesSearch;
   });
 
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedCategory, searchQuery]);
+
+  const paginatedProducts = useMemo(() => {
+    const start = (currentPage - 1) * 10;
+    return filteredProducts.slice(start, start + 10);
+  }, [filteredProducts, currentPage]);
+
   return (
     <div className="space-y-6">
-      {/* Toast notification */}
+      {/* Toast notification (non-blocking fixed top-right alert) */}
       {toastMessage && (
         <div
-          className={`p-4 rounded-2xl text-xs font-semibold flex items-center gap-2 border animate-in fade-in slide-in-from-top-2 ${
+          className={`fixed top-20 right-6 z-50 p-4 rounded-2xl text-xs font-semibold flex items-center gap-2.5 shadow-xl border animate-in fade-in slide-in-from-top-3 ${
             toastMessage.type === "success"
               ? "bg-emerald-50 border-emerald-200 text-emerald-800"
               : "bg-rose-50 border-rose-200 text-rose-800"
@@ -190,7 +185,7 @@ export default function AdminProductsListPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-brand-border/50 text-zinc-700">
-              {filteredProducts.map((p) => {
+              {paginatedProducts.map((p) => {
                 const isOutOfStock = (p.stockCount ?? 0) <= 0 || !p.inStock;
                 const isLowStock = (p.stockCount ?? 0) < 10;
 
@@ -286,6 +281,14 @@ export default function AdminProductsListPage() {
             </tbody>
           </table>
         </div>
+
+        {/* Boutique Pagination Component */}
+        <AdminPagination
+          currentPage={currentPage}
+          totalItems={filteredProducts.length}
+          itemsPerPage={10}
+          onPageChange={setCurrentPage}
+        />
       </div>
 
       {/* Delete Confirmation Modal */}

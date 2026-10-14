@@ -1,25 +1,25 @@
 @import "tailwindcss";
 
 @theme {
-  --color-brand-primary: #B76E79;
-  --color-brand-primary-hover: #9E5B65;
-  --color-brand-primary-light: #F7E9EB;
-  --color-brand-blush: #FFF0F3;
-  --color-brand-blush-subtle: #FFF7F8;
-  --color-brand-champagne: #D4AF37;
-  --color-brand-champagne-light: #FBF4DE;
-  --color-brand-ivory: #FAF8F5;
-  --color-brand-charcoal: #1A1A1A;
-  --color-brand-muted: #666666;
-  --color-brand-border: #EFE8E5;
+  --color-brand-primary: #4A1525;
+  --color-brand-primary-hover: #3B0E1B;
+  --color-brand-primary-light: #F3E5D8;
+  --color-brand-blush: #FAF7F5;
+  --color-brand-blush-subtle: #FDFBF9;
+  --color-brand-champagne: #D4A373;
+  --color-brand-champagne-light: #FAF0E6;
+  --color-brand-ivory: #FAF7F5;
+  --color-brand-charcoal: #240610;
+  --color-brand-muted: #554348;
+  --color-brand-border: #EAE3DE;
 
   --font-serif: var(--font-playfair), Georgia, serif;
   --font-sans: var(--font-inter), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
 :root {
-  --background: #FAF8F5;
-  --foreground: #1A1A1A;
+  --background: #FAF7F5;
+  --foreground: #240610;
 }
 
 body {
@@ -32,13 +32,13 @@ body {
 
 /* Elegant selection & scrollbar */
 ::selection {
-  background-color: #B76E79;
-  color: #FFFFFF;
+  background-color: #4A1525;
+  color: #F3E5D8;
 }
 
 /* Custom smooth transitions for boutique feel */
 .luxury-shadow {
-  box-shadow: 0 10px 30px -10px rgba(183, 110, 121, 0.15);
+  box-shadow: 0 10px 30px -10px rgba(74, 21, 37, 0.12);
 }
 
 .card-hover {
@@ -47,5 +47,5 @@ body {
 
 .card-hover:hover {
   transform: translateY(-4px);
-  box-shadow: 0 14px 35px -10px rgba(183, 110, 121, 0.2);
+  box-shadow: 0 14px 35px -10px rgba(74, 21, 37, 0.16);
 }

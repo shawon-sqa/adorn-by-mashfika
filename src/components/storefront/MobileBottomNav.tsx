@@ -36,7 +36,7 @@ function MobileBottomNavContent({ onOpenSearch }: MobileBottomNavProps) {
   return (
     <nav
       aria-label="Mobile Bottom Navigation"
-      className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-brand-border/80 px-2 py-1.5 shadow-[0_-4px_16px_rgba(0,0,0,0.06)]"
+      className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-[#EAE3DE] px-2 py-1.5 shadow-[0_-4px_16px_rgba(0,0,0,0.06)]"
     >
       <div className="grid grid-cols-5 items-center max-w-md mx-auto">
         {/* Home */}
@@ -44,8 +44,8 @@ function MobileBottomNavContent({ onOpenSearch }: MobileBottomNavProps) {
           href="/"
           className={`flex flex-col items-center justify-center py-1.5 px-1 rounded-xl transition-colors ${
             isHome
-              ? "text-brand-primary font-semibold"
-              : "text-zinc-500 hover:text-brand-charcoal"
+              ? "text-[#4A1525] font-semibold"
+              : "text-zinc-500 hover:text-[#240610]"
           }`}
         >
           <Home className="w-5 h-5 mb-0.5" />
@@ -57,8 +57,8 @@ function MobileBottomNavContent({ onOpenSearch }: MobileBottomNavProps) {
           href="/shop"
           className={`flex flex-col items-center justify-center py-1.5 px-1 rounded-xl transition-colors ${
             isShop
-              ? "text-brand-primary font-semibold"
-              : "text-zinc-500 hover:text-brand-charcoal"
+              ? "text-[#4A1525] font-semibold"
+              : "text-zinc-500 hover:text-[#240610]"
           }`}
         >
           <Sparkles className="w-5 h-5 mb-0.5" />
@@ -69,7 +69,7 @@ function MobileBottomNavContent({ onOpenSearch }: MobileBottomNavProps) {
         <button
           type="button"
           onClick={onOpenSearch}
-          className="flex flex-col items-center justify-center py-1.5 px-1 rounded-xl text-zinc-500 hover:text-brand-primary transition-colors cursor-pointer"
+          className="flex flex-col items-center justify-center py-1.5 px-1 rounded-xl text-zinc-500 hover:text-[#4A1525] transition-colors cursor-pointer"
           aria-label="Search Collection"
         >
           <Search className="w-5 h-5 mb-0.5" />
@@ -80,7 +80,7 @@ function MobileBottomNavContent({ onOpenSearch }: MobileBottomNavProps) {
         <button
           type="button"
           onClick={openWishlist}
-          className="flex flex-col items-center justify-center py-1.5 px-1 rounded-xl text-zinc-500 hover:text-brand-primary transition-colors relative cursor-pointer"
+          className="flex flex-col items-center justify-center py-1.5 px-1 rounded-xl text-zinc-500 hover:text-[#4A1525] transition-colors relative cursor-pointer"
           aria-label="View Wishlist"
         >
           <div className="relative">
@@ -90,7 +90,7 @@ function MobileBottomNavContent({ onOpenSearch }: MobileBottomNavProps) {
               }`}
             />
             {totalFavorites > 0 && (
-              <span className="absolute -top-1 -right-2 bg-rose-500 text-white text-[9px] font-bold h-3.5 min-w-[14px] px-1 rounded-full flex items-center justify-center shadow-xs">
+              <span className="absolute -top-1 -right-2 bg-[#D4A373] text-[#240610] text-[9px] font-bold h-3.5 min-w-[14px] px-1 rounded-full flex items-center justify-center shadow-xs">
                 {totalFavorites}
               </span>
             )}
@@ -102,13 +102,13 @@ function MobileBottomNavContent({ onOpenSearch }: MobileBottomNavProps) {
         <button
           type="button"
           onClick={openCart}
-          className="flex flex-col items-center justify-center py-1.5 px-1 rounded-xl text-zinc-500 hover:text-brand-primary transition-colors relative cursor-pointer"
+          className="flex flex-col items-center justify-center py-1.5 px-1 rounded-xl text-zinc-500 hover:text-[#4A1525] transition-colors relative cursor-pointer"
           aria-label="View Shopping Bag"
         >
           <div className="relative">
-            <ShoppingBag className="w-5 h-5 mb-0.5 text-brand-charcoal" />
+            <ShoppingBag className="w-5 h-5 mb-0.5 text-[#240610]" />
             {totalItems > 0 && (
-              <span className="absolute -top-1 -right-2 bg-brand-primary text-white text-[9px] font-bold h-3.5 min-w-[14px] px-1 rounded-full flex items-center justify-center shadow-xs animate-in zoom-in-50">
+              <span className="absolute -top-1 -right-2 bg-[#D4A373] text-[#240610] text-[9px] font-bold h-3.5 min-w-[14px] px-1 rounded-full flex items-center justify-center shadow-xs animate-in zoom-in-50">
                 {totalItems}
               </span>
             )}

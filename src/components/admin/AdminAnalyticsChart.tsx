@@ -1,12 +1,14 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import {
   TrendingUp,
   DollarSign,
   ShoppingBag,
   Calendar,
   Sparkles,
+  ChevronDown,
+  Check,
 } from "lucide-react";
 import { AdminOrderRecord } from "@/lib/data/adminOrders";
 import { formatPrice } from "@/lib/utils/formatters";
@@ -19,6 +21,21 @@ export function AdminAnalyticsChart({ orders }: AdminAnalyticsChartProps) {
   const [chartMode, setChartMode] = useState<"revenue" | "volume">("revenue");
   const [timeRange, setTimeRange] = useState<"7days" | "30days">("7days");
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+  const [isRangeDropdownOpen, setIsRangeDropdownOpen] = useState(false);
+  const rangeDropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        rangeDropdownRef.current &&
+        !rangeDropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsRangeDropdownOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   // Group orders by day
   const dataPoints = useMemo(() => {
@@ -129,9 +146,9 @@ export function AdminAnalyticsChart({ orders }: AdminAnalyticsChartProps) {
   }, [pathD, pointsCoords, chartInnerHeight]);
 
   return (
-    <div className="bg-white rounded-3xl border border-brand-border/80 p-5 sm:p-7 shadow-2xs space-y-6">
+    <div className="bg-white rounded-3xl border border-brand-border/80 p-5 sm:p-7 shadow-2xs space-y-6" suppressHydrationWarning>
       {/* Chart Header & Controls */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4" suppressHydrationWarning>
         <div>
           <div className="flex items-center gap-2">
             <h2 className="font-serif text-lg sm:text-xl text-brand-charcoal">
@@ -146,7 +163,7 @@ export function AdminAnalyticsChart({ orders }: AdminAnalyticsChartProps) {
           </p>
         </div>
 
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex items-center gap-2 flex-wrap" suppressHydrationWarning>
           {/* Mode Toggle: Revenue vs Volume */}
           <div className="inline-flex rounded-xl bg-[#FAF8F5] p-1 border border-brand-border/60">
             <button
@@ -176,15 +193,58 @@ export function AdminAnalyticsChart({ orders }: AdminAnalyticsChartProps) {
             </button>
           </div>
 
-          {/* Time Range Toggle */}
-          <select
-            value={timeRange}
-            onChange={(e) => setTimeRange(e.target.value as "7days" | "30days")}
-            className="px-3 py-1.5 rounded-xl border border-brand-border bg-[#FAF8F5] text-xs font-semibold text-brand-charcoal focus:outline-none focus:border-brand-primary cursor-pointer"
-          >
-            <option value="7days">Last 7 Days</option>
-            <option value="30days">Last 14 Days</option>
-          </select>
+          {/* Custom Time Range Boutique Dropdown */}
+          <div className="relative inline-block" ref={rangeDropdownRef} suppressHydrationWarning>
+            <button
+              type="button"
+              suppressHydrationWarning
+              onClick={() => setIsRangeDropdownOpen(!isRangeDropdownOpen)}
+              className="inline-flex items-center justify-between gap-2.5 bg-[#FAF8F5] border border-brand-border/80 text-brand-charcoal text-xs font-semibold rounded-xl px-3 py-1.5 hover:border-[#D4A373] transition-colors cursor-pointer shadow-2xs min-w-[125px]"
+              aria-haspopup="listbox"
+              aria-expanded={isRangeDropdownOpen}
+            >
+              <span>{timeRange === "7days" ? "Last 7 Days" : "Last 14 Days"}</span>
+              <ChevronDown
+                className={`w-3.5 h-3.5 text-zinc-500 transition-transform duration-200 ${
+                  isRangeDropdownOpen ? "rotate-180" : ""
+                }`}
+              />
+            </button>
+
+            {isRangeDropdownOpen && (
+              <div
+                role="listbox"
+                className="absolute right-0 mt-1.5 w-36 bg-white border border-[#EAE3DE] shadow-lg rounded-xl py-1 z-30 animate-in fade-in zoom-in-95 duration-150"
+              >
+                {[
+                  { label: "Last 7 Days", value: "7days" as const },
+                  { label: "Last 14 Days", value: "30days" as const },
+                ].map((opt) => {
+                  const isSelected = timeRange === opt.value;
+                  return (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      role="option"
+                      aria-selected={isSelected}
+                      onClick={() => {
+                        setTimeRange(opt.value);
+                        setIsRangeDropdownOpen(false);
+                      }}
+                      className={`w-full px-3 py-2 text-left text-xs flex items-center justify-between transition-colors cursor-pointer ${
+                        isSelected
+                          ? "bg-[#FAF7F5] text-[#4A1525] font-semibold"
+                          : "text-[#240610] hover:bg-[#FAF7F5] font-normal"
+                      }`}
+                    >
+                      <span>{opt.label}</span>
+                      {isSelected && <Check className="w-3.5 h-3.5 text-[#D4A373]" />}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 

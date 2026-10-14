@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Phone, Mail, MapPin } from "lucide-react";
+import { Phone, Mail, MapPin, MessageCircle } from "lucide-react";
 import { useStoreSettings } from "@/lib/data/storeSettings";
 
 export function Footer() {
@@ -13,7 +13,7 @@ export function Footer() {
   const address = storeSettings.address || "Dhaka, Bangladesh";
 
   return (
-    <footer className="bg-[#171616] text-[#E0DCD7] border-t border-brand-primary/20 mt-auto">
+    <footer className="bg-[#1C0810] text-[#E0DCD7] border-t border-[#D4A373]/20 mt-auto">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 lg:py-16">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
           {/* Brand Info */}
@@ -21,18 +21,28 @@ export function Footer() {
             <h3 className="font-serif text-2xl tracking-wide text-white">
               {storeSettings.storeName || "Adorn by Mashfika"}
             </h3>
-            <p className="text-xs uppercase tracking-[0.2em] text-brand-champagne font-medium">
-              {storeSettings.tagline || "Elegance in Every Detail"}
-            </p>
-            <p className="text-sm text-zinc-400 leading-relaxed">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#D4A373]/10 border border-[#D4A373]/30 text-[#D4A373] text-[11px] font-serif uppercase tracking-[0.2em] font-medium">
+              ✦ {storeSettings.tagline || "Elegance in Every Detail"}
+            </div>
+            <p className="text-sm text-[#E0DCD7]/75 leading-relaxed font-light">
               Curated jewelry, handpicked accessories, and bespoke contemporary fashion designed to make every occasion memorable.
             </p>
             <div className="flex items-center space-x-3 pt-2">
               <a
+                href={`https://wa.me/${waNumber}`}
+                target="_blank"
+                rel="noreferrer"
+                className="w-9 h-9 rounded-full bg-[#240610] border border-[#D4A373]/25 flex items-center justify-center text-[#D4A373] hover:text-[#1C0810] hover:bg-[#D4A373] transition-all shadow-xs"
+                aria-label="WhatsApp Concierge"
+                title="Chat on WhatsApp"
+              >
+                <MessageCircle className="w-4 h-4" />
+              </a>
+              <a
                 href="https://instagram.com"
                 target="_blank"
                 rel="noreferrer"
-                className="w-9 h-9 rounded-full bg-zinc-800 flex items-center justify-center text-zinc-300 hover:text-white hover:bg-brand-primary transition-all"
+                className="w-9 h-9 rounded-full bg-[#240610] border border-[#D4A373]/25 flex items-center justify-center text-[#D4A373] hover:text-[#1C0810] hover:bg-[#D4A373] transition-all shadow-xs"
                 aria-label="Instagram"
               >
                 <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
@@ -40,11 +50,12 @@ export function Footer() {
                 </svg>
               </a>
               <a
-                href="https://facebook.com"
+                href="https://www.facebook.com/share/1MEcH4rHRD/"
                 target="_blank"
-                rel="noreferrer"
-                className="w-9 h-9 rounded-full bg-zinc-800 flex items-center justify-center text-zinc-300 hover:text-white hover:bg-brand-primary transition-all"
-                aria-label="Facebook"
+                rel="noopener noreferrer"
+                className="w-9 h-9 rounded-full bg-[#240610] border border-[#D4A373]/25 flex items-center justify-center text-[#D4A373] hover:text-[#1C0810] hover:bg-[#D4A373] transition-all shadow-xs"
+                aria-label="Facebook Page"
+                title="Follow us on Facebook"
               >
                 <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
                   <path d="M9 8H6v4h3v12h5V12h3.642L18 8h-4V6.333C14 5.374 14.5 5 15.6 5H18V0h-3.808C10.597 0 9 1.583 9 4.615V8z" />
@@ -55,32 +66,32 @@ export function Footer() {
 
           {/* Quick Collections */}
           <div className="space-y-3">
-            <h4 className="text-sm font-semibold tracking-wider uppercase text-white font-sans">
+            <h4 className="text-xs sm:text-sm font-serif font-semibold tracking-widest uppercase text-[#D4A373]">
               Collections
             </h4>
-            <ul className="space-y-2 text-sm text-zinc-400">
+            <ul className="space-y-2 text-sm text-[#E0DCD7]/75">
               <li>
-                <Link href="/shop?category=jewelry" className="hover:text-brand-champagne transition-colors">
+                <Link href="/shop?category=jewelry" className="hover:text-[#D4A373] transition-colors">
                   Necklaces & Chokers
                 </Link>
               </li>
               <li>
-                <Link href="/shop?category=earrings" className="hover:text-brand-champagne transition-colors">
+                <Link href="/shop?category=earrings" className="hover:text-[#D4A373] transition-colors">
                   Statement Earrings & Jhumkas
                 </Link>
               </li>
               <li>
-                <Link href="/shop?category=bracelets" className="hover:text-brand-champagne transition-colors">
+                <Link href="/shop?category=bracelets" className="hover:text-[#D4A373] transition-colors">
                   Bangles & Bracelets
                 </Link>
               </li>
               <li>
-                <Link href="/shop?category=accessories" className="hover:text-brand-champagne transition-colors">
+                <Link href="/shop?category=accessories" className="hover:text-[#D4A373] transition-colors">
                   Hair Ornaments & Clutches
                 </Link>
               </li>
               <li>
-                <Link href="/shop?category=fashion" className="hover:text-brand-champagne transition-colors">
+                <Link href="/shop?category=fashion" className="hover:text-[#D4A373] transition-colors">
                   Boutique Pret Wear
                 </Link>
               </li>
@@ -89,32 +100,32 @@ export function Footer() {
 
           {/* Customer Care */}
           <div className="space-y-3">
-            <h4 className="text-sm font-semibold tracking-wider uppercase text-white font-sans">
+            <h4 className="text-xs sm:text-sm font-serif font-semibold tracking-widest uppercase text-[#D4A373]">
               Customer Care
             </h4>
-            <ul className="space-y-2 text-sm text-zinc-400">
+            <ul className="space-y-2 text-sm text-[#E0DCD7]/75">
               <li>
-                <Link href="/faq" className="hover:text-brand-champagne transition-colors font-medium text-white/90 flex items-center gap-1.5">
+                <Link href="/faq" className="hover:text-[#D4A373] transition-colors font-medium text-white/90 flex items-center gap-1.5">
                   Frequently Asked Questions (FAQ)
                 </Link>
               </li>
               <li>
-                <Link href="/track-order" className="hover:text-brand-champagne transition-colors">
+                <Link href="/track-order" className="hover:text-[#D4A373] transition-colors">
                   Track Your Order
                 </Link>
               </li>
               <li>
-                <Link href="/shipping-policy" className="hover:text-brand-champagne transition-colors">
+                <Link href="/shipping" className="hover:text-[#D4A373] transition-colors">
                   Delivery & Shipping (All Bangladesh)
                 </Link>
               </li>
               <li>
-                <Link href="/returns-exchange" className="hover:text-brand-champagne transition-colors">
+                <Link href="/returns" className="hover:text-[#D4A373] transition-colors">
                   Returns & Exchange Policy
                 </Link>
               </li>
               <li>
-                <Link href="/admin/login" className="text-zinc-500 hover:text-zinc-300 text-xs transition-colors">
+                <Link href="/admin/login" className="text-[#E0DCD7]/40 hover:text-[#D4A373] text-xs transition-colors">
                   Staff Portal
                 </Link>
               </li>
@@ -123,46 +134,46 @@ export function Footer() {
 
           {/* Boutique Contact */}
           <div className="space-y-3">
-            <h4 className="text-sm font-semibold tracking-wider uppercase text-white font-sans">
+            <h4 className="text-xs sm:text-sm font-serif font-semibold tracking-widest uppercase text-[#D4A373]">
               Boutique Concierge
             </h4>
-            <div className="space-y-2.5 text-sm text-zinc-400">
+            <div className="space-y-2.5 text-sm text-[#E0DCD7]/75">
               <div className="flex items-start space-x-2.5">
-                <MapPin className="h-4 w-4 text-brand-champagne flex-shrink-0 mt-0.5" />
+                <MapPin className="h-4 w-4 text-[#D4A373] flex-shrink-0 mt-0.5" />
                 <span>{address}</span>
               </div>
               <div className="flex items-center space-x-2.5">
-                <Phone className="h-4 w-4 text-brand-champagne flex-shrink-0" />
+                <Phone className="h-4 w-4 text-[#D4A373] flex-shrink-0" />
                 <a
                   href={`https://wa.me/${waNumber}`}
                   target="_blank"
                   rel="noreferrer"
-                  className="hover:text-brand-champagne transition-colors"
+                  className="hover:text-[#D4A373] transition-colors"
                 >
                   {phone} (WhatsApp available)
                 </a>
               </div>
               <div className="flex items-center space-x-2.5">
-                <Mail className="h-4 w-4 text-brand-champagne flex-shrink-0" />
+                <Mail className="h-4 w-4 text-[#D4A373] flex-shrink-0" />
                 <a
                   href={`mailto:${email}`}
-                  className="hover:text-brand-champagne transition-colors"
+                  className="hover:text-[#D4A373] transition-colors"
                 >
                   {email}
                 </a>
               </div>
             </div>
             <div className="pt-2">
-              <span className="inline-block text-[11px] uppercase tracking-wider text-brand-champagne bg-zinc-800/80 px-2.5 py-1 rounded">
-                Cash on Delivery & bKash Supported
+              <span className="inline-block text-[11px] uppercase tracking-wider text-[#D4A373] bg-[#240610] border border-[#D4A373]/30 px-3 py-1.5 rounded-full font-serif italic">
+                ✦ Cash on Delivery & bKash Supported
               </span>
             </div>
           </div>
         </div>
 
-        <div className="mt-12 pt-8 border-t border-zinc-800 text-center text-xs text-zinc-500 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="mt-12 pt-8 border-t border-[#D4A373]/15 text-center text-xs text-[#E0DCD7]/60 flex flex-col sm:flex-row items-center justify-between gap-4">
           <p>© 2026 Adorn by Mashfika. All rights reserved.</p>
-          <p className="text-zinc-400">Crafted for timeless feminine beauty.</p>
+          <p className="text-[#D4A373]/80 font-serif italic">Crafted for timeless feminine beauty.</p>
         </div>
       </div>
     </footer>

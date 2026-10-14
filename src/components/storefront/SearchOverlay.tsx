@@ -94,8 +94,8 @@ export function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
         onClick={(e) => e.stopPropagation()}
       >
         {/* Search Input Bar */}
-        <form onSubmit={handleSubmit} className="p-4 sm:p-5 border-b border-brand-border/70 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-brand-blush flex items-center justify-center text-brand-primary flex-shrink-0">
+        <form onSubmit={handleSubmit} className="p-4 sm:p-5 border-b border-[#EAE3DE] flex items-center gap-3">
+          <div className="w-10 h-10 rounded-2xl bg-[#4A1525]/10 border border-[#D4A373]/30 flex items-center justify-center text-[#4A1525] flex-shrink-0">
             <Search className="w-5 h-5" />
           </div>
 
@@ -162,19 +162,19 @@ export function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
                 <button
                   type="button"
                   onClick={handleSubmit}
-                  className="mt-3 px-5 py-2 rounded-full bg-brand-blush text-brand-primary text-xs font-semibold hover:bg-brand-primary hover:text-white transition-colors"
+                  className="mt-3 px-5 py-2 rounded-full bg-[#FAF7F5] border border-[#E7DFD8] text-[#4A1525] text-xs font-semibold hover:bg-[#4A1525] hover:text-white transition-colors"
                 >
                   Search catalog for "{query}"
                 </button>
               </div>
             ) : (
               <>
-                <div className="p-3 bg-[#FAF8F5] text-[11px] font-semibold text-zinc-500 uppercase tracking-wider flex items-center justify-between">
+                <div className="p-3 bg-[#FAF7F5] text-[11px] font-semibold text-zinc-500 uppercase tracking-wider flex items-center justify-between border-b border-[#EAE3DE]">
                   <span>Matching Creations ({filteredResults.length})</span>
                   <button
                     type="button"
                     onClick={handleSubmit}
-                    className="text-brand-primary hover:underline flex items-center gap-1"
+                    className="text-[#4A1525] hover:underline flex items-center gap-1 font-medium"
                   >
                     View all in shop <ArrowRight className="w-3 h-3" />
                   </button>
@@ -185,9 +185,9 @@ export function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
                     key={product.id}
                     type="button"
                     onClick={() => handleSelectProduct(product.slug)}
-                    className="w-full p-4 flex items-center gap-4 text-left hover:bg-brand-blush-subtle/60 transition-colors group cursor-pointer"
+                    className="w-full p-4 flex items-center gap-4 text-left hover:bg-[#FAF7F5] transition-colors group cursor-pointer"
                   >
-                    <div className="w-14 h-14 rounded-xl border border-brand-border/80 overflow-hidden relative flex-shrink-0 bg-brand-ivory flex items-center justify-center">
+                    <div className="w-14 h-14 rounded-xl border border-[#EAE3DE] overflow-hidden relative flex-shrink-0 bg-[#FAF7F5] flex items-center justify-center">
                       {product.images && product.images[0] ? (
                         <img
                           src={product.images[0]}

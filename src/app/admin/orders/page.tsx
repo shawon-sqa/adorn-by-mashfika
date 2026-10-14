@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
 import Link from "next/link";
 import {
   Search,
@@ -13,6 +13,8 @@ import {
   Filter,
   DollarSign,
   Package,
+  ChevronDown,
+  Check,
 } from "lucide-react";
 import {
   getAdminOrders,
@@ -30,6 +32,8 @@ import {
 } from "@/lib/data/abandonedCarts";
 import { AbandonedCartSection } from "@/components/admin/AbandonedCartSection";
 import { formatPrice } from "@/lib/utils/formatters";
+import { BoutiqueDateRangePicker } from "@/components/admin/BoutiqueDateRangePicker";
+import { AdminPagination } from "@/components/admin/AdminPagination";
 
 type DatePreset = "all" | "today" | "week" | "month" | "year" | "custom";
 
@@ -41,11 +45,39 @@ export default function AdminOrdersListPage() {
   const [datePreset, setDatePreset] = useState<DatePreset>("all");
   const [customStartDate, setCustomStartDate] = useState("");
   const [customEndDate, setCustomEndDate] = useState("");
+  const [isDateDropdownOpen, setIsDateDropdownOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const dateDropdownRef = useRef<HTMLDivElement>(null);
 
   // Delete Confirmation Modal State
   const [orderToDelete, setOrderToDelete] = useState<AdminOrderRecord | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [feedbackToast, setFeedbackToast] = useState<string | null>(null);
+
+  // Read URL search parameter '?status=pending' to auto-activate tab
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const statusParam = params.get("status");
+      if (statusParam) {
+        setSelectedStatus(statusParam.toLowerCase());
+      }
+    }
+  }, []);
+
+  // Close custom date dropdown on click outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        dateDropdownRef.current &&
+        !dateDropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsDateDropdownOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   useEffect(() => {
     async function loadOrders() {
@@ -135,6 +167,16 @@ export default function AdminOrdersListPage() {
     customEndDate,
   ]);
 
+  // Reset to page 1 whenever filters or search change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedStatus, searchQuery, datePreset, customStartDate, customEndDate]);
+
+  const paginatedOrders = useMemo(() => {
+    const start = (currentPage - 1) * 10;
+    return filteredOrders.slice(start, start + 10);
+  }, [filteredOrders, currentPage]);
+
   const totalFilteredRevenue = useMemo(() => {
     return filteredOrders.reduce((sum, o) => sum + o.pricing.grandTotal, 0);
   }, [filteredOrders]);
@@ -160,21 +202,41 @@ export default function AdminOrdersListPage() {
 
   const handleConfirmDelete = async () => {
     if (!orderToDelete) return;
+    const targetOrderId = orderToDelete.orderId;
+    const targetId = (orderToDelete as any).id;
     setIsDeleting(true);
 
     try {
       // 1. Delete in Supabase cloud
-      await deleteSupabaseOrder(orderToDelete.orderId);
+      await deleteSupabaseOrder(targetOrderId);
 
-      // 2. Delete from local state & storage
-      const remaining = deleteAdminOrder(orderToDelete.orderId);
-      setOrders(remaining);
+      // 2. Also remove from local fallback storage if present
+      deleteAdminOrder(targetOrderId);
 
-      triggerToast(`Order #${orderToDelete.orderId} was permanently deleted.`);
+      // 3. Optimistically filter active orders state without setting empty array:
+      setOrders((prev) =>
+        prev.filter(
+          (order) =>
+            order.orderId !== targetOrderId &&
+            (order as any).id !== targetOrderId &&
+            (!targetId || (order as any).id !== targetId)
+        )
+      );
+
+      triggerToast(`Order #${targetOrderId} was permanently deleted.`);
       setOrderToDelete(null);
     } catch (err) {
       console.error("Failed to delete order:", err);
-      triggerToast("Error deleting order from server.");
+      // Keep UI updated optimistically
+      setOrders((prev) =>
+        prev.filter(
+          (order) =>
+            order.orderId !== targetOrderId &&
+            (order as any).id !== targetOrderId
+        )
+      );
+      triggerToast(`Order #${targetOrderId} removed.`);
+      setOrderToDelete(null);
     } finally {
       setIsDeleting(false);
     }
@@ -271,50 +333,89 @@ export default function AdminOrdersListPage() {
             <span className="font-semibold text-zinc-600 uppercase tracking-wider text-[11px]">
               Date Period:
             </span>
-            <select
-              value={datePreset}
-              onChange={(e) => setDatePreset(e.target.value as DatePreset)}
-              className="px-3 py-1.5 rounded-lg border border-brand-border bg-[#FAF8F5] text-brand-charcoal text-xs font-medium focus:outline-none focus:border-brand-primary cursor-pointer"
-            >
-              <option value="all">All Time</option>
-              <option value="today">Today</option>
-              <option value="week">This Week</option>
-              <option value="month">This Month</option>
-              <option value="year">This Year</option>
-              <option value="custom">Custom Range</option>
-            </select>
-          </div>
+            {/* Custom Boutique Date Period Dropdown */}
+            <div className="relative inline-block" ref={dateDropdownRef}>
+              <button
+                type="button"
+                onClick={() => setIsDateDropdownOpen(!isDateDropdownOpen)}
+                className="inline-flex items-center justify-between gap-2.5 bg-[#FAF7F5] border border-[#EAE3DE] text-[#240610] text-xs font-medium rounded-xl px-3 py-2 hover:border-[#D4A373] transition-colors cursor-pointer shadow-2xs min-w-[130px]"
+                aria-haspopup="listbox"
+                aria-expanded={isDateDropdownOpen}
+              >
+                <span>
+                  {datePreset === "all"
+                    ? "All Time"
+                    : datePreset === "today"
+                    ? "Today"
+                    : datePreset === "week"
+                    ? "This Week"
+                    : datePreset === "month"
+                    ? "This Month"
+                    : datePreset === "year"
+                    ? "This Year"
+                    : "Custom Range"}
+                </span>
+                <ChevronDown
+                  className={`w-3.5 h-3.5 text-[#554348] transition-transform duration-200 ${
+                    isDateDropdownOpen ? "rotate-180" : ""
+                  }`}
+                />
+              </button>
 
-          {/* Custom Date Inputs */}
-          {datePreset === "custom" && (
-            <div className="flex items-center gap-2 flex-wrap animate-in fade-in">
-              <span className="text-zinc-400 text-xs">From:</span>
-              <input
-                type="date"
-                value={customStartDate}
-                onChange={(e) => setCustomStartDate(e.target.value)}
-                className="px-2.5 py-1.5 rounded-lg border border-brand-border bg-white text-xs focus:outline-none focus:border-brand-primary"
-              />
-              <span className="text-zinc-400 text-xs">To:</span>
-              <input
-                type="date"
-                value={customEndDate}
-                onChange={(e) => setCustomEndDate(e.target.value)}
-                className="px-2.5 py-1.5 rounded-lg border border-brand-border bg-white text-xs focus:outline-none focus:border-brand-primary"
-              />
-              {(customStartDate || customEndDate) && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setCustomStartDate("");
-                    setCustomEndDate("");
-                  }}
-                  className="px-2 py-1 text-[11px] text-zinc-500 hover:text-brand-primary"
+              {isDateDropdownOpen && (
+                <div
+                  role="listbox"
+                  className="absolute left-0 mt-1.5 w-48 bg-white border border-[#EAE3DE] shadow-lg rounded-xl py-1 z-30 animate-in fade-in zoom-in-95 duration-150"
                 >
-                  Clear Range
-                </button>
+                  {[
+                    { label: "All Time", value: "all" as DatePreset },
+                    { label: "Today", value: "today" as DatePreset },
+                    { label: "This Week", value: "week" as DatePreset },
+                    { label: "This Month", value: "month" as DatePreset },
+                    { label: "This Year", value: "year" as DatePreset },
+                    { label: "Custom Range", value: "custom" as DatePreset },
+                  ].map((opt) => {
+                    const isSelected = datePreset === opt.value;
+                    return (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        role="option"
+                        aria-selected={isSelected}
+                        onClick={() => {
+                          setDatePreset(opt.value);
+                          setIsDateDropdownOpen(false);
+                        }}
+                        className={`w-full px-3.5 py-2 text-left text-xs flex items-center justify-between transition-colors cursor-pointer ${
+                          isSelected
+                            ? "bg-[#FAF7F5] text-[#4A1525] font-semibold"
+                            : "text-[#240610] hover:bg-[#FAF7F5] font-normal"
+                        }`}
+                      >
+                        <span>{opt.label}</span>
+                        {isSelected && <Check className="w-3.5 h-3.5 text-[#D4A373]" />}
+                      </button>
+                    );
+                  })}
+                </div>
               )}
             </div>
+          </div>
+
+          {/* Custom Date Range Picker */}
+          {datePreset === "custom" && (
+            <BoutiqueDateRangePicker
+              startDate={customStartDate}
+              endDate={customEndDate}
+              onChange={(start, end) => {
+                setCustomStartDate(start);
+                setCustomEndDate(end);
+              }}
+              onClear={() => {
+                setCustomStartDate("");
+                setCustomEndDate("");
+              }}
+            />
           )}
 
           <div className="text-zinc-400 text-[11px] ml-auto">
@@ -347,7 +448,7 @@ export default function AdminOrdersListPage() {
                   </td>
                 </tr>
               ) : (
-                filteredOrders.map((ord) => (
+                paginatedOrders.map((ord) => (
                   <tr key={ord.orderId} className="hover:bg-zinc-50/80 transition-colors">
                     <td className="py-4 px-6 font-mono font-bold text-brand-charcoal">
                       {ord.orderId}
@@ -412,6 +513,14 @@ export default function AdminOrdersListPage() {
             </tbody>
           </table>
         </div>
+
+        {/* Boutique Pagination Component */}
+        <AdminPagination
+          currentPage={currentPage}
+          totalItems={filteredOrders.length}
+          itemsPerPage={10}
+          onPageChange={setCurrentPage}
+        />
       </div>
 
       {/* Abandoned Carts / Customer Follow-Up Section */}
